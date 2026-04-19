@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pathon — Hawkathon 2026</title>
+<link rel="icon" type="image/png" href="pathonlogo.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600;1,700&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+<style>
+/* ─── Reset & Tokens ─────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:      #0d0e12;
+  --s1:      #13151c;
+  --s2:      #191d27;
+  --border:  #252a38;
+  --t1:      #f0eff4;
+  --t2:      #9ba3b8;
+  --t3:      #5c6478;
+  --t4:      #363d52;
+  --copper:  #c9a86c;
+  --copper2: #a08650;
+  --indigo:  #7c85f5;
+  --green:   #5a8a6a;
+  --red:     #ef4444;
+}
+
+html, body {
+  width: 100%; height: 100%;
+  background: var(--bg);
+  color: var(--t1);
+  font-family: 'Inter', system-ui, sans-serif;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Deck Shell ─────────────────────────────────────────────────────────── */
+.deck {
+  width: 100vw; height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 80px;
+  opacity: 0;
+  transform: translateX(60px);
+  transition: opacity 0.45s cubic-bezier(0.22,1,0.36,1),
+              transform 0.45s cubic-bezier(0.22,1,0.36,1);
+  pointer-events: none;
+}
+.slide.active {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+.slide.exit {
+  opacity: 0;
+  transform: translateX(-60px);
+}
+
+/* ─── Ambient background orbs ────────────────────────────────────────────── */
+.orb {
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(80px);
+  animation: drift 20s ease-in-out infinite;
+}
+.orb-copper {
+  width: 700px; height: 500px;
+  background: radial-gradient(ellipse, rgba(201,168,108,0.09) 0%, transparent 70%);
+  top: -10%; left: 30%;
+  animation-duration: 22s;
+}
+.orb-indigo {
+  width: 600px; height: 440px;
+  background: radial-gradient(ellipse, rgba(124,133,245,0.07) 0%, transparent 70%);
+  bottom: -15%; right: -5%;
+  animation-duration: 18s;
+  animation-delay: -8s;
+}
+.orb-green {
+  width: 400px; height: 320px;
+  background: radial-gradient(ellipse, rgba(90,138,106,0.05) 0%, transparent 70%);
+  top: 20%; left: -5%;
+  animation-duration: 26s;
+  animation-delay: -14s;
+}
+@keyframes drift {
+  0%,100% { transform: translate(0,0) scale(1); }
+  33%      { transform: translate(30px,-20px) scale(1.06); }
+  66%      { transform: translate(-15px,25px) scale(0.96); }
+}
+
+/* ─── Progress bar ───────────────────────────────────────────────────────── */
+.progress-bar {
+  position: fixed; top: 0; left: 0; right: 0; height: 2px;
+  background: var(--border);
+  z-index: 100;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--copper), var(--indigo));
+  transition: width 0.4s ease;
+  box-shadow: 0 0 12px rgba(201,168,108,0.5);
+}
+
+/* ─── Slide counter ──────────────────────────────────────────────────────── */
+.slide-counter {
+  position: fixed; bottom: 28px; right: 36px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--t4);
+  z-index: 100;
+  display: flex; align-items: center; gap: 8px;
+}
+.slide-counter span { color: var(--t3); }
+
+/* ─── Nav arrows ─────────────────────────────────────────────────────────── */
+.nav-btn {
+  position: fixed; bottom: 24px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  width: 40px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--t3);
+  transition: all 0.2s ease;
+  z-index: 100;
+  font-size: 14px;
+}
+.nav-btn:hover { background: rgba(255,255,255,0.08); color: var(--t1); }
+.nav-prev { right: 140px; }
+.nav-next { right: 90px; }
+
+/* ─── Typography ─────────────────────────────────────────────────────────── */
+.eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--t4); margin-bottom: 16px;
+}
+.eyebrow.copper { color: var(--copper); }
+.eyebrow.indigo { color: var(--indigo); }
+
+.h-giant {
+  font-family: 'Poppins', system-ui;
+  font-style: italic; font-weight: 300;
+  font-size: clamp(2.8rem, 5.5vw, 5rem);
+  line-height: 1.08; letter-spacing: -0.03em;
+  color: var(--t1);
+}
+.h-giant .accent-copper { color: var(--copper); }
+.h-giant .accent-indigo { color: var(--indigo); }
+
+.h-section {
+  font-family: 'Poppins', system-ui;
+  font-style: italic; font-weight: 300;
+  font-size: clamp(1.8rem, 3.5vw, 3rem);
+  letter-spacing: -0.025em; line-height: 1.15;
+  color: var(--t1);
+}
+
+.body-text {
+  font-family: 'Inter', system-ui;
+  font-size: clamp(0.9rem, 1.6vw, 1.1rem);
+  color: var(--t3); line-height: 1.75;
+}
+
+.mono-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--t4);
+}
+
+/* ─── Cards ──────────────────────────────────────────────────────────────── */
+.glass-card {
+  background: rgba(19,21,28,0.75);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 20px;
+  backdrop-filter: blur(20px);
+}
+
+.feature-pill {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px;
+  background: rgba(19,21,28,0.6);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  font-family: 'Inter', system-ui;
+  font-size: 13px; font-weight: 500;
+  color: var(--t2);
+  transition: all 0.2s ease;
+}
+.feature-pill .icon { font-size: 15px; flex-shrink: 0; }
+.feature-pill.copper { border-left: 2px solid var(--copper); }
+.feature-pill.indigo { border-left: 2px solid var(--indigo); }
+.feature-pill.green  { border-left: 2px solid var(--green); }
+
+.stat-box {
+  text-align: center; padding: 20px 28px;
+}
+.stat-num {
+  font-family: 'Poppins', system-ui;
+  font-style: italic; font-weight: 300;
+  font-size: clamp(2rem, 3.5vw, 3rem);
+  line-height: 1; letter-spacing: -0.03em;
+}
+.stat-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--t4);
+  margin-top: 6px;
+}
+
+/* ─── Image placeholder ──────────────────────────────────────────────────── */
+.img-slot {
+  width: 100%; border-radius: 16px;
+  background: rgba(255,255,255,0.02);
+  border: 1.5px dashed rgba(255,255,255,0.1);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 10px; overflow: hidden;
+  position: relative;
+}
+.img-slot img {
+  width: 100%; height: 100%;
+  object-fit: cover; border-radius: 14px;
+  display: block;
+}
+.img-slot .placeholder-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--t4);
+  position: absolute; bottom: 12px; left: 50%;
+  transform: translateX(-50%); white-space: nowrap;
+  background: rgba(13,14,18,0.85);
+  padding: 4px 10px; border-radius: 6px;
+  border: 1px solid var(--border);
+  pointer-events: none;
+}
+/* Hide label when real image is loaded */
+.img-slot img ~ .placeholder-label { display: none; }
+
+/* ─── Pipeline step ──────────────────────────────────────────────────────── */
+.pipeline-step {
+  display: flex; align-items: flex-start; gap: 16px; padding: 16px 20px;
+  background: rgba(19,21,28,0.6);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px; flex: 1;
+}
+.step-num {
+  width: 36px; height: 36px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px; font-weight: 700; flex-shrink: 0;
+}
+
+/* ─── Tech chip ──────────────────────────────────────────────────────────── */
+.tech-chip {
+  padding: 8px 16px; border-radius: 10px;
+  font-family: 'DM Mono', monospace; font-size: 11px;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--t2); white-space: nowrap;
+}
+
+/* ─── Divider line ───────────────────────────────────────────────────────── */
+.divider {
+  width: 1px; background: rgba(255,255,255,0.07);
+  align-self: stretch;
+}
+
+/* ─── Logo mark ──────────────────────────────────────────────────────────── */
+.logo-mark {
+  width: 48px; height: 48px; border-radius: 14px;
+  display: block; object-fit: cover; flex-shrink: 0;
+}
+.logo-mark.small {
+  width: 32px; height: 32px; border-radius: 9px;
+}
+
+/* ─── Top bar (inside slides) ────────────────────────────────────────────── */
+.slide-topbar {
+  position: absolute; top: 28px; left: 60px; right: 60px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.slide-topbar-logo {
+  display: flex; align-items: center; gap: 10px;
+}
+.slide-topbar-logo span {
+  font-family: 'Poppins', system-ui; font-weight: 600;
+  font-size: 15px; color: var(--t2); letter-spacing: -0.01em;
+}
+
+/* ─── Score ring ─────────────────────────────────────────────────────────── */
+.score-ring-wrap {
+  position: relative; width: 120px; height: 120px; flex-shrink: 0;
+}
+.score-ring-wrap svg { transform: rotate(-90deg); }
+.score-center {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+.score-num {
+  font-family: 'Poppins', system-ui; font-style: italic;
+  font-weight: 300; font-size: 2rem; line-height: 1;
+  letter-spacing: -0.02em;
+}
+.score-sub {
+  font-family: 'DM Mono', monospace; font-size: 8px;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--t4); margin-top: 2px;
+}
+
+/* ─── Gap badge ──────────────────────────────────────────────────────────── */
+.gap-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 14px; border-radius: 10px;
+}
+.gap-badge.critical {
+  background: rgba(239,68,68,0.06);
+  border: 1px solid rgba(239,68,68,0.2);
+  border-left: 3px solid #ef4444;
+}
+.gap-badge.moderate {
+  background: rgba(201,168,108,0.06);
+  border: 1px solid rgba(201,168,108,0.2);
+  border-left: 3px solid var(--copper);
+}
+
+/* ─── Glow line ──────────────────────────────────────────────────────────── */
+.glow-line {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--copper), var(--indigo), var(--green), transparent);
+  opacity: 0.35; width: 100%;
+}
+
+/* ─── Keyboard hint ──────────────────────────────────────────────────────── */
+.kbd-hint {
+  position: fixed; bottom: 28px; left: 36px;
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--t4);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/*  SLIDE LAYOUTS                                                               */
+/* ─────────────────────────────────────────────────────────────────────────── */
+
+/* Full-width content */
+.w-full { width: 100%; max-width: 1100px; }
+
+/* Two-column */
+.col-2 {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 48px; align-items: center;
+  width: 100%; max-width: 1100px;
+}
+.col-3 {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  gap: 20px; width: 100%; max-width: 1100px;
+}
+.col-55-45 {
+  display: grid; grid-template-columns: 55fr 45fr;
+  gap: 56px; align-items: center;
+  width: 100%; max-width: 1100px;
+}
+
+/* Stack */
+.stack { display: flex; flex-direction: column; gap: 12px; }
+.stack-sm { display: flex; flex-direction: column; gap: 8px; }
+.row { display: flex; align-items: center; gap: 12px; }
+.row-wrap { display: flex; flex-wrap: wrap; gap: 10px; }
+.spacer-sm { height: 16px; }
+.spacer-md { height: 28px; }
+.spacer-lg { height: 44px; }
+</style>
+</head>
+<body>
+
+<!-- Ambient orbs -->
+<div class="orb orb-copper"></div>
+<div class="orb orb-indigo"></div>
+<div class="orb orb-green"></div>
+
+<!-- Progress bar -->
+<div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+
+<!-- Slide counter -->
+<div class="slide-counter" id="counter"><span id="cur">1</span> / <span id="tot">1</span></div>
+
+<!-- Keyboard hint -->
+<div class="kbd-hint">← → arrow keys or click to navigate</div>
+
+<!-- Nav buttons -->
+<button class="nav-btn nav-prev" onclick="go(-1)">←</button>
+<button class="nav-btn nav-next" onclick="go(1)">→</button>
+
+<div class="deck" id="deck">
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     SLIDE 1 — TITLE
+════════════════════════════════════════════════════════════════════════ -->
+<div class="slide" data-slide="1">
+  <div class="slide-topbar">
+    <div class="slide-topbar-logo">
+      <img class="logo-mark small" src="pathonlogo.png" alt="Pathon" />
+      <span>Pathon</span>
+    </div>
+    <span class="mono-label" style="color:var(--copper)">Hawkathon 2026</span>
+  </div>
+
+  <div style="text-align:center; max-width:800px">
+    <img class="logo-mark" src="pathonlogo.png" alt="Pathon" style="margin: 0 auto 36px" />
+
+    <p class="eyebrow copper">Career Intelligence Platform</p>
+
+    <h1 class="h-giant" style="margin-bottom:28px">
+      The AI layer for<br>
+      <span class="accent-copper">both sides</span> of every hire.
+    </h1>
+
+    <p class="body-text" style="max-width:560px; margin: 0 auto 44px">
+      Not a chatbot. Not a job board. A full intelligence system that
+      understands job seekers and hiring teams — from the same platform.
+    </p>
+
+    <div class="glow-line" style="max-width:500px; margin: 0 auto"></div>
+
+    <div class="spacer-md"></div>
+
+    <div style="display:flex; justify-content:center; gap:32px; flex-wrap:wrap">
+      <div class="stat-box">
+        <div class="stat-num" style="color:var(--copper)">13+</div>
+        <div class="stat-label">AI-powered tools</div>
+      </div>
+      <div class="divider"></div>
+      <div class="stat-box">
+        <div class="stat-num" style="color:var(--indigo)">2</div>
+        <div class="stat-label">sides of hiring</div>
+      </div>
+      <div class="divider"></div>
+      <div class="stat-box">
+        <div class="stat-num" style="color:var(--green)">0</div>
+        <div class="stat-label">passwords needed</div>
+      </div>
+      <div class="divider"></div>
+      <div class="stat-box">
+        <div class="stat-num" style="color:var(--copper)">48h</div>
+        <div class="stat-label">build time</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     SLIDE 2 — THE PROBLEM
+════════════════════════════════════════════════════════════════════════ -->
+<div class="slide" data-slide="2">
+  <div class="slide-topbar">
+    <div class="slide-topbar-logo">
+      <img class="logo-mark small" src="pathonlogo.png" alt="Pathon" /><span>Pathon</span>
+    </div>
+    <span class="mono-label">The Problem</span>
+  </div>
+
+  <div class="col-2">
+    <div>
+      <p class="eyebrow">Why we built this</p>
+      <h2 class="h-section" style="margin-bottom:28px">
+        The hiring market is broken<br>for <span style="color:var(--copper)">everyone.</span>
+      </h2>
+      <div class="stack">
+        <div class="feature-pill copper">
+          <span class="icon">✗</span>
+          Most people don't know exactly what skill they're missing
+        </div>
+        <div class="feature-pill copper">
+          <span class="icon">✗</span>
+          Resumes are auto-rejected by parsers in under 3 seconds
+        </div>
+        <div class="feature-pill copper">
+          <span class="icon">✗</span>
+          Cover letters are generic — they know nothing about you
+        </div>
+        <div class="feature-pill indigo">
+          <span class="icon">✗</span>
+          Hiring managers read 200 resumes manually to find 5 people
+        </div>
+        <div class="feature-pill indigo">
+          <span class="icon">✗</span>
+          No tool works for both sides of the same hire
+        </div>
+      </div>
+    </div>
+
+    <div class="glass-card" style="padding:36px; text-align:center">
+      <div style="margin-bottom:28px">
+        <div style="font-family:'Poppins',system-ui; font-style:italic; font-weight:300; font-size:3.5rem; line-height:1; color:var(--red); letter-spacing:-0.03em">73%</div>
+        <div class="mono-label" style="margin-top:8px">of resumes never reach a human</div>
+      </div>
+      <div class="glow-line" style="opacity:0.2; margin-bottom:28px"></div>
+      <div style="margin-bottom:28px">
+        <div style="font-family:'Poppins',system-ui; font-style:italic; font-weight:300; font-size:3.5rem; line-height:1; color:var(--copper); letter-spacing:-0.03em">$22k</div>
+        <div class="mono-label" style="margin-top:8px">avg salary left on the table from poor negotiation</div>
+      </div>
+      <div class="glow-line" style="opacity:0.2; margin-bottom:28px"></div>
+      <div>
+        <div style="font-family:'Poppins',system-ui; font-style:italic; font-weight:300; font-size:3.5rem; line-height:1; color:var(--indigo); letter-spacing:-0.03em">42 days</div>
+        <div class="mono-label" style="margin-top:8px">avg time to fill a role — most of it wasted on manual screening</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     SLIDE 3 — THE SOLUTION
+════════════════════════════════════════════════════════════════════════ -->
+<div class="slide" data-slide="3">
+  <div class="slide-topbar">
+    <div class="slide-topbar-logo">
+      <img class="logo-mark small" src="pathonlogo.png" alt="Pathon" /><span>Pathon</span>
+    </div>
+    <span class="mono-label">The Solution</span>
+  </div>
+
+  <div class="w-full">
+    <div style="text-align:center; margin-bottom:48px">
+      <p class="eyebrow copper">One platform. Two dashboards.</p>
+      <h2 class="h-section">
+        Built for the job seeker <em>and</em> the<br>hiring team — <span style="color:var(--indigo)">sharing the same intelligence.</span>
+      </h2>
+    </div>
+
+    <!-- IMAGE SLOT: Landing page screenshot showing mode switcher -->
+    <div class="img-slot" style="height:320px; margin-bottom:32px">
+      <!--
+        HOW TO REPLACE: Add an <img> tag as the first child of this div.
+        Example:
+          <img src="screenshots/landing-mode-switcher.png" alt="Landing page" />
+        The placeholder label will automatically hide when an image is present.
+      -->
+      <div style="text-align:center; color:var(--t4)">
+        <div style="font-size:28px; margin-bottom:12px">🖥</div>
+        <div class="mono-label">Landing page — for job seekers ↔ for employers mode switcher</div>
+      </div>
+      <div class="placeholder-label">📸 screenshot/landing-page.png</div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr auto 1fr; gap:24px; align-items:center">
+      <div class="glass-card" style="padding:24px">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px">
+          <div style="width:8px;height:8px;border-radius:50%;background:var(--copper);box-shadow:0 0 8px var(--copper)"></div>
+          <span class="mono-label" style="color:var(--copper)">Job Seeker Side</span>
+        </div>
+        <div class="stack-sm">
+          <div class="feature-pill copper" style="font-size:12px">◆ AI Career Mentor</div>
+          <div class="feature-pill copper" style="font-size:12px">⊕ Gap Analyzer + Syllabus</div>
+          <div class="feature-pill copper" style="font-size:12px">◷ AI Mock Interview (voice)</div>
+          <div class="feature-pill copper" style="font-size:12px">◈ ATS Resume Scanner</div>
+          <div class="feature-pill copper" style="font-size:12px">◎ Salary Negotiation Practice</div>
+        </div>
+      </div>
+
+      <div style="text-align:center">
+        <img class="logo-mark" src="pathonlogo.png" alt="Pathon" />
+        <div class="glow-line" style="width:1px;height:40px;margin:12px auto;background:linear-gradient(180deg,var(--copper),var(--indigo))"></div>
+        <div class="mono-label" style="white-space:nowrap">shared<br>intelligence</div>
+      </div>
+
+      <div class="glass-card" style="padding:24px">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px">
+          <div style="width:8px;height:8px;border-radius:50%;background:var(--indigo);box-shadow:0 0 8px var(--indigo)"></div>
+          <span class="mono-label" style="color:var(--indigo)">Employer Side</span>
+        </div>
+        <div class="stack-sm">
+          <div class="feature-pill indigo" style="font-size:12px">◐ AI Job Description Builder</div>
+          <div class="feature-pill indigo" style="font-size:12px">◑ Auto Resume Scoring</div>
+          <div class="feature-pill indigo" style="font-size:12px">◒ Candidate Pipeline (Kanban)</div>
+          <div class="feature-pill indigo" style="font-size:12px">◓ Interview Kit Generator</div>
+          <div class="feature-pill indigo" style="font-size:12px">◔ Company Branding Profile</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     SLIDE 4 — APPLICANT DASHBOARD
+════════════════════════════════════════════════════════════════════════ -->
+<div class="slide" data-slide="4">
+  <div class="slide-topbar">
+    <div class="slide-topbar-logo">
+      <img class="logo-mark small" src="pathonlogo.png" alt="Pathon" /><span>Pathon</span>
+    </div>
+    <span class="mono-label" style="color:var(--copper)">Applicant Dashboard</span>
+  </div>
+
+  <div class="col-55-45">
+    <div>
+      <p class="eyebrow copper">Job Seeker Command Center</p>
+      <h2 class="h-section" style="margin-bottom:20px">
+        Not a dashboard.<br>A <span style="color:var(--copper)">command center.</span>
+      </h2>
+      <p class="body-text" style="margin-bottom:28px; font-size:0.95rem">
+        Every number, every action, every recommendation is driven by what
+        we know about you — not generic advice. The AI decides your next best move.
+      </p>
+
+      <div class="stack-sm">
+        <div class="row">
+          <div style="width:6px;height:6px;border-radius:50%;background:var(--copper);flex-shrink:0"></div>
+          <span style="font-family:'Inter',system-ui;font-size:13px;color:var(--t2)">Next Best Action card — AI-driven priority action</span>
+        </div>
+        <div class="row">
+          <div style="width:6px;height:6px;border-radius:50%;background:var(--copper);flex-shrink:0"></div>
+          <span style="font-family:'Inter',system-ui;font-size:13px;color:var(--t2)">Live metrics — Applications, Network size, Warm paths</span>
+        </div>
+        <div class="row">
+          <div style="width:6px;height:6px;border-radius:50%;background:var(--copper);flex-shrink:0"></div>
+          <span style="font-family:'Inter',system-ui;font-size:13px;color:var(--t2)">6 tool tiles with 3D tilt — each links to a real AI tool</span>
+        </div>
+        <div class="row">
+          <div style="width:6px;height:6px;border-radius:50%;background:var(--copper);flex-shrink:0"></div>
+          <span style="font-family:'Inter',system-ui;font-size:13px;color:var(--t2)">LinkedIn import prompt — unlocks network map + context</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- IMAGE SLOT: Applicant dashboard screenshot -->
+    <div class="img-slot" style="height:400px">
+      <!--
+        HOW TO REPLACE:
+          <img src="screenshots/applicant-dashboard.png" alt="Applicant Dashboard" />
+      -->
+      <div style="text-align:center; color:var(--t4)">
+        <div style="font-size:28px; margin-bottom:12px">📊</div>
+        <div class="mono-label">Applicant Dashboard</div>
+      </div>
+      <div class="placeholder-label">📸 screenshot/applicant-dashboard.png</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     SLIDE 5 — GAP ANALYZER (the centerpiece)
+════════════════════════════════════════════════════════════════════════ -->
+<div class="slide" data-slide="5">
+  <div class="slide-topbar">
+    <div class="slide-topbar-logo">
+      <img class="logo-mark small" src="pathonlogo.png" alt="Pathon" /><span>Pathon</span>
+    </div>
+    <span class="mono-label" style="color:var(--copper)">⭐ Gap Analyzer — Centerpiece</span>
+  </div>
+
+  <div class="w-full">
+    <div style="text-align:center; margin-bottom:32px">
+      <p class="eyebrow copper">3-Phase AI Pipeline · Real-time Streaming</p>
+      <h2 class="h-section">
+        Know exactly <span style="color:var(--copper)">what's missing.</span>
+      </h2>
+    </div>
+
+    <!-- Pipeline steps -->
+    <div style="display:flex; gap:16px; margin-bottom:28px; align-items:stretch">
+      <div class="pipeline-step">
+        <div class="step-num" style="background:rgba(14,165,233,0.12);border:1px solid rgba(14,165,233,0.25);color:#0ea5e9">01</div>
+        <div>
+          <div style="font-family:'Inter',system-ui;font-weight:600;font-size:13px;color:var(--t1);margin-bottom:4px">Market Oracle</div>
+          <div style="font-family:'Inter',system-ui;font-size:12px;color:var(--t4)">Live salary ranges · demand signals · hot skills · company intel</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;color:var(--t4);font-size:18px;flex-shrink:0">→</div>
+      <div class="pipeline-step">
+        <div class="step-num" style="background:rgba(124,133,245,0.12);border:1px solid rgba(124,133,245,0.25);color:var(--indigo)">02</div>
+        <div>
+          <div style="font-family:'Inter',system-ui;font-weight:600;font-size:13px;color:var(--t1);margin-bottom:4px">Gap Planner</div>
+          <div style="font-family:'Inter',system-ui;font-size:12px;color:var(--t4)">Maps your profile vs. market requirements · readiness score · timeline</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;color:var(--t4);font-size:18px;flex-shrink:0">→</div>
+      <div class="pipeline-step">
+        <div class="step-num" style="background:rgba(201,168,108,0.12);border:1px solid rgba(201,168,108,0.25);color:var(--copper)">03</div>
+        <div>
+          <div style="font-family:'Inter',system-ui;font-weight:600;font-size:13px;color:var(--t1);margin-bottom:4px">Syllabus Builder</div>
+          <div style="font-family:'Inter',system-ui;font-size:12px;color:var(--t4)">Real verified URLs · day-by-day schedule · Coursera · YouTube · certs</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- IMAGE SLOT: Gap Analyzer results screenshot -->
+    <div class="img-slot" style="height:280px">
+      <!--
+        HOW TO REPLACE:
+          <img src="screenshots/gap-analyzer-results.png" alt="Gap Analyzer" />
+      -->
+      <div style="text-align:center; color:var(--t4)">
+        <div style="font-size:28px; margin-bottom:10px">🧠</div>
+        <div class="mono-label">Gap Analyzer — results view with oracle panel + readiness score</div>
+      </div>
+      <div class="placeholder-label">📸 screenshot/gap-analyzer-results.png</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     SLIDE 6 — 48-HOUR SYLLABUS
+════════════════════════════════════════════════════════════════════════ -->
+<div class="slide" data-slide="6">
+  <div class="slide-topbar">
+    <div class="slide-topbar-logo">
+      <img class="logo-mark small" src="pathonlogo.png" alt="Pathon" /><span>Pathon</span>
+    </div>
+    <span class="mono-label" style="color:var(--copper)">48-Hour Syllabus</span>
+  </div>
+
+  <div class="col-55-45">
+    <div>
+      <p class="eyebrow copper">Real links. Real courses. Real schedule.</p>
+      <h2 class="h-section" style="margin-bottom:20px">
+        Not hallucinated.<br><span style="color:var(--copper)">Verified.</span>
+      </h2>
+      <p class="body-text" style="font-size:0.95rem; margin-bottom:28px">
+        50+ curated resources with direct verified URLs baked into the AI
+        prompt. The model can only use links we've verified — no search
+        redirects, no made-up courses.
+      </p>
+
+      <div class="stack-sm" style="margin-bottom:20px">
+        <div class="row-wrap">
+          <div class="tech-chip" style="border-color:rgba(239,68,68,0.25);color:#ef9393">YouTube Playlists</div>
+          <div class="tech-chip" style="border-color:rgba(0,87,183,0.25);color:#4d9de0">Coursera Specializations</div>
+          <div class="tech-chip" style="border-color:rgba(255,107,53,0.25);color:#ff9a7c">DeepLearning.ai</div>
+          <div class="tech-chip" style="border-color:rgba(90,138,106,0.25);color:var(--green)">fast.ai</div>
+          <div class="tech-chip" style="border-color:rgba(255,165,0,0.25);color:#fbbf24">AWS / GCP Certs</div>
+        </div>
+      </div>
+
+      <!-- Simulated syllabus day block -->
+      <div class="glass-card" style="padding:18px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+          <div style="width:28px;height:28px;border-radius:8px;background:rgba(201,168,108,0.12);border:1px solid rgba(201,168,108,0.2);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:11px;font-weight:700;color:var(--copper)">1</div>
+          <div>
+            <div style="font-family:'Inter',system-ui;font-size:13px;font-weight:600;color:var(--t1)">Day 1</div>
+            <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--copper)">4h · 2 sessions</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;gap:8px;align-items:flex-start">
+            <div style="width:6px;height:6px;border-radius:50%;background:#ef4444;margin-top:5px;flex-shrink:0"></div>
+            <div>
+              <div style="font-family:'Inter',system-ui;font-size:11px;color:var(--t2)">Morning · 2h — Watch Neural Networks lecture 1–3, implement backprop in Python</div>
+              <div style="display:inline-flex;align-items:center;gap:5px;margin-top:4px;padding:3px 8px;border-radius:6px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.15)">
+                <span style="font-size:9px">▶</span>
+                <span style="font-family:'Inter',system-ui;font-size:10px;font-weight:600;color:var(--t1)">Neural Networks: Zero to Hero</span>
+                <span style="font-family:'DM Mono',monospace;font-size:8px;color:#22c55e;background:rgba(34,197,94,0.1);border-radius:3px;padding:0 4px">FREE</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- IMAGE SLOT: Syllabus tab screenshot -->
+    <div class="img-slot" style="height:420px">
+      <!--
+        HOW TO REPLACE:
+          <img src="screenshots/syllabus-card.png" alt="48-Hour Syllabus" />
+      -->
+      <div style="text-align:center; color:var(--t4)">
+        <div style="font-size:28px; margin-bottom:10px">📚</div>
+        <div class="mono-label">48-Hour Syllabus with real course links</div>
+      </div>
+      <div class="placeholder-label">📸 screenshot/syllabus-card.png</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     SLIDE 7 — MORE APPLICANT TOOLS
+════════════════════════════════════════════════════════════════════════ -->
+<div class="slide" data-slide="7">
+  <div class="slide-topbar">
+    <div class="slide-topbar-logo">
+      <img class="logo-mark small" src="pathonlogo.png" alt="Pathon" /><span>Pathon</span>
+    </div>
+    <span class="mono-label" style="color:var(--copper)">Applicant Tools</span>
+  </div>
+
+  <div class="w-full">
+    <div style="text-align:center; margin-bottom:36px">
+      <p class="eyebrow copper">Every tool connected to your profile</p>
+      <h2 class="h-section">
+        8 tools. One system.<br><span style="color:var(--copper)">Nothing generic.</span>
+      </h2>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px">
+      <!-- Mock Interview -->
+      <div class="glass-card" style="padding:24px">
+        <div style="display:flex;align-items:flex-start;gap:14px">
+          <div style="width:42px;height:42px;border-radius:12px;background:rgba(90,138,106,0.12);border:1px solid rgba(90,138,106,0.25);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">◷</div>
+          <div style="flex:1">
+            <div style="font-family:'Inter',system-ui;font-weight:600;font-size:14px;color:var(--t1);margin-bottom:4px">AI Mock Interview — Live Voice</div>
+            <div style="font-family:'Inter',system-ui;font-size:12px;color:var(--t3);line-height:1.6">Real-time voice. You speak, the AI interviewer responds with spoken audio. Behavioral, technical, or case. Detailed feedback at the end.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ATS Scanner -->
+      <div class="glass-card" style="padding:24px">
+        <div style="display:flex;align-items:flex-start;gap:14px">
+          <div style="width:42px;height:42px;border-radius:12px;background:rgba(124,133,245,0.12);border:1px solid rgba(124,133,245,0.25);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">◈</div>
+          <div style="flex:1">
+            <div style="font-family:'Inter',system-ui;font-weight:600;font-size:14px;color:var(--t1);margin-bottom:4px">ATS Resume Scanner</div>
+            <div style="font-family:'Inter',system-ui;font-size:12px;color:var(--t3);line-height:1.6">Score your resume against any job description. See exactly what a recruiter's parser will see. Fix it before you apply.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Salary -->
+      <div class="glass-card" style="padding:24px">
+        <div style="display:flex;align-items:flex-start;gap:14px">
+          <div style="width:42px;height:42px;border-radius:12px;background:rgba(201,168,108,0.12);border:1px solid rgba(201,168,108,0.25);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">◎</div>
+          <div style="flex:1">
+            <div style="font-family:'Inter',system-ui;font-weight:600;font-size:14px;color:var(--t1);margin-bottom:4px">Salary + Negotiation Practice</div>
+            <div style="font-family:'Inter',system-ui;font-size:12px;color:var(--t3);line-height:1.6">Live market salary range for your role. Practice negotiation with an AI that pushes back like a real hiring manager.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cover Letter -->
+      <div class="glass-card" style="padding:24px">
+        <div style="display:flex;align-items:flex-start;gap:14px">
+          <div style="width:42px;height:42px;border-radius:12px;background:rgba(90,138,106,0.12);border:1px solid rgba(90,138,106,0.25);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">◷</div>
+          <div style="flex:1">
+            <div style="font-family:'Inter',system-ui;font-weight:600;font-size:14px;color:var(--t1);margin-bottom:4px">Cover Letter AI</div>
+            <div style="font-family:'Inter',system-ui;font-size:12px;color:var(--t3);line-height:1.6">Written from your actual career data — not templates. Targets the specific role and company. Knows your voice.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- IMAGE SLOT: Mock interview screenshot -->
+    <div class="img-slot" style="height:100px;margin-top:20px">
+      <!--
+        HOW TO REPLACE:
+          <img src="screenshots/mock-interview.png" alt="Mock Interview" />
+      -->
+      <div class="placeholder-label">📸 screenshot/mock-interview.png — or leave blank</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     SLIDE 8 — EMPLOYER DASHBOARD
+════════════════════════════════════════════════════════════════════════ -->
+<div class="slide" data-slide="8">
+  <div class="slide-topbar">
+    <div class="slide-topbar-logo">
+      <img class="logo-mark small" src="pathonlogo.png" alt="Pathon" /><span>Pathon</span>
+    </div>
+    <span class="mono-label" style="color:var(--indigo)">Employer Dashboard</span>
+  </div>
+
+  <div class="col-55-45">
+    <!-- IMAGE SLOT: Employer dashboard -->
+    <div class="img-slot" style="height:420px">
+      <!--
+        HOW TO REPLACE:
+          <img src="screenshots/employer-dashboard.png" alt="Employer Dashboard" />
+      -->
+      <div style="text-align:center; color:var(--t4)">
+        <div style="font-size:28px; margin-bottom:10px">🏢</div>
+        <div class="mono-label">Employer Command Center — stat cards + pipeline + job postings</div>
+      </div>
+      <div class="placeholder-label">📸 screenshot/employer-dashboard.png</div>
+    </div>
+
+    <div>
+      <p class="eyebrow indigo">For Hiring Teams</p>
+      <h2 class="h-section" style="margin-bottom:20px">
+        Post, screen, and hire.<br><span style="color:var(--indigo)">3× faster.</span>
+      </h2>
+      <p class="body-text" style="font-size:0.95rem; margin-bottom:24px">
+        Same magic link. Same platform. Select "Hiring" on first login
+        and you're in the employer dashboard — a completely separate
+        experience powered by the same AI intelligence layer.
+      </p>
+      <div class="stack-sm">
+        <div class="feature-pill indigo" style="font-size:12px">◐ AI Job Description Builder — plain English in, JD out</div>
+        <div class="feature-pill indigo" style="font-size:12px">◑ Auto-score every applicant against your rubric</div>
+        <div class="feature-pill indigo" style="font-size:12px">◒ Kanban pipeline — drag candidates through stages</div>
+        <div class="feature-pill indigo" style="font-size:12px">◓ Interview kit per candidate — one click</div>
+        <div class="feature-pill indigo" style="font-size:12px">◔ Company profile — sells the role before a call</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     SLIDE 9 — EMPLOYER JOB BUILDER
+════════════════════════════════════════════════════════════════════════ -->
+<div class="slide" data-slide="9">
+  <div class="slide-topbar">
+    <div class="slide-topbar-logo">
+      <img class="logo-mark small" src="pathonlogo.png" alt="Pathon" /><span>Pathon</span>
+    </div>
+    <span class="mono-label" style="color:var(--indigo)">Job Builder + Pipeline</span>
+  </div>
+
+  <div class="col-2">
+    <div>
+      <p class="eyebrow indigo">AI Job Builder</p>
+      <h2 class="h-section" style="margin-bottom:20px">
+        Write the role in<br><span style="color:var(--indigo)">plain English.</span>
+      </h2>
+      <p class="body-text" style="font-size:0.95rem; margin-bottom:24px">
+        Type what you need. The AI writes a market-calibrated,
+        bias-checked job description with sections, requirements,
+        and nice-to-haves — ready to post in under 30 seconds.
+      </p>
+
+      <!-- Simulated input box -->
+      <div class="glass-card" style="padding:16px; margin-bottom:20px">
+        <div class="mono-label" style="margin-bottom:8px">Plain English input →</div>
+        <div style="font-family:'Inter',system-ui;font-size:13px;color:var(--t3);line-height:1.7;font-style:italic">
+          "Senior backend engineer who can own payments infrastructure,
+           mentor junior devs, work closely with product on roadmap..."
+        </div>
+      </div>
+
+      <!-- IMAGE SLOT: Job Builder output -->
+      <div class="img-slot" style="height:140px">
+        <!--
+          HOW TO REPLACE:
+            <img src="screenshots/job-builder.png" alt="Job Builder" />
+        -->
+        <div class="placeholder-label">📸 screenshot/job-builder.png</div>
+      </div>
+    </div>
+
+    <div>
+      <p class="eyebrow indigo" style="margin-bottom:16px">Candidate Pipeline</p>
+      <!-- IMAGE SLOT: Pipeline Kanban -->
+      <div class="img-slot" style="height:260px; margin-bottom:20px">
+        <!--
+          HOW TO REPLACE:
+            <img src="screenshots/pipeline-kanban.png" alt="Pipeline" />
+        -->
+        <div style="text-align:center; color:var(--t4)">
+          <div style="font-size:24px; margin-bottom:8px">◒</div>
+          <div class="mono-label">Kanban pipeline — candidates by stage</div>
+        </div>
+        <div class="placeholder-label">📸 screenshot/pipeline-kanban.png</div>
+      </div>
+
+      <div class="glass-card" style="padding:18px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:12px">
+          <span class="mono-label">Pipeline stages</span>
+          <span class="mono-label" style="color:var(--indigo)">Auto-scored</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-family:'Inter',system-ui;font-size:12px;color:var(--t3)">Applied</span>
+            <div style="height:4px;width:90%;border-radius:2px;background:var(--indigo);opacity:0.30"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-family:'Inter',system-ui;font-size:12px;color:var(--t3)">Reviewed</span>
+            <div style="height:4px;width:72%;border-radius:2px;background:var(--indigo);opacity:0.42"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-family:'Inter',system-ui;font-size:12px;color:var(--t3)">Phone Screen</span>
+            <div style="height:4px;width:48%;border-radius:2px;background:var(--indigo);opacity:0.54"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-family:'Inter',system-ui;font-size:12px;color:var(--t3)">Interview</span>
+            <div style="height:4px;width:30%;border-radius:2px;background:var(--indigo);opacity:0.66"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-family:'Inter',system-ui;font-size:12px;color:var(--t3)">Decision</span>
+            <div style="height:4px;width:14%;border-radius:2px;background:var(--indigo);opacity:0.78"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-family:'Inter',system-ui;font-size:12px;color:var(--t3)">Hired</span>
+            <div style="height:4px;width:6%;border-radius:2px;background:var(--indigo);opacity:0.90"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     SLIDE 10 — TECH ARCHITECTURE
+════════════════════════════════════════════════════════════════════════ -->
+<div class="slide" data-slide="10">
+  <div class="slide-topbar">
+    <div class="slide-topbar-logo">
+      <img class="logo-mark small" src="pathonlogo.png" alt="Pathon" /><span>Pathon</span>
+    </div>
+    <span class="mono-label">Tech Stack + Architecture</span>
+  </div>
+
+  <div class="w-full">
+    <div style="text-align:center; margin-bottom:40px">
+      <p class="eyebrow">Under the Hood</p>
+      <h2 class="h-section">
+        Production-ready.<br><span style="color:var(--indigo)">No mocks. No fixtures.</span>
+      </h2>
+    </div>
+
+    <div class="col-3" style="margin-bottom:28px">
+      <!-- Frontend -->
+      <div class="glass-card" style="padding:24px">
+        <div class="mono-label" style="color:var(--copper);margin-bottom:14px">Frontend</div>
+        <div class="stack-sm">
+          <div class="tech-chip">Next.js 15 App Router</div>
+          <div class="tech-chip">TypeScript</div>
+          <div class="tech-chip">Framer Motion</div>
+          <div class="tech-chip">Server-Sent Events</div>
+        </div>
+      </div>
+
+      <!-- Backend / AI -->
+      <div class="glass-card" style="padding:24px">
+        <div class="mono-label" style="color:var(--indigo);margin-bottom:14px">AI Layer</div>
+        <div class="stack-sm">
+          <div class="tech-chip">Claude Haiku 4.5</div>
+          <div class="tech-chip">3-Phase SSE Pipeline</div>
+          <div class="tech-chip">50+ Resource Library</div>
+          <div class="tech-chip">Hard Fallback System</div>
+        </div>
+      </div>
+
+      <!-- Infra -->
+      <div class="glass-card" style="padding:24px">
+        <div class="mono-label" style="color:var(--green);margin-bottom:14px">Infrastructure</div>
+        <div class="stack-sm">
+          <div class="tech-chip">Supabase (Auth + DB)</div>
+          <div class="tech-chip">Vercel Edge</div>
+          <div class="tech-chip">Magic Link PKCE Auth</div>
+          <div class="tech-chip">Real-time Streaming</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pipeline diagram -->
+    <div class="glass-card" style="padding:20px 28px">
+      <div class="mono-label" style="margin-bottom:16px">Gap Analyzer Pipeline — Real-time SSE Streaming</div>
+      <div style="display:flex;align-items:center;gap:0;overflow-x:auto">
+        <div style="display:flex;align-items:center;gap:0;flex-shrink:0">
+          <div style="padding:10px 16px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);text-align:center;min-width:110px">
+            <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--t4);letter-spacing:0.1em;text-transform:uppercase;line-height:1.5">Career Context</div>
+          </div>
+          <div style="color:var(--t4);font-size:16px;padding:0 6px;flex-shrink:0">→</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:0;flex-shrink:0">
+          <div style="padding:10px 16px;border-radius:10px;background:rgba(14,165,233,0.08);border:1px solid rgba(255,255,255,0.07);text-align:center;min-width:110px">
+            <div style="font-family:'DM Mono',monospace;font-size:9px;color:#0ea5e9;letter-spacing:0.1em;text-transform:uppercase;line-height:1.5">Market Oracle<br>6s timeout</div>
+          </div>
+          <div style="color:var(--t4);font-size:16px;padding:0 6px;flex-shrink:0">→</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:0;flex-shrink:0">
+          <div style="padding:10px 16px;border-radius:10px;background:rgba(124,133,245,0.08);border:1px solid rgba(255,255,255,0.07);text-align:center;min-width:110px">
+            <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--indigo);letter-spacing:0.1em;text-transform:uppercase;line-height:1.5">Gap Planner<br>haiku · 900t</div>
+          </div>
+          <div style="color:var(--t4);font-size:16px;padding:0 6px;flex-shrink:0">→</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:0;flex-shrink:0">
+          <div style="padding:10px 16px;border-radius:10px;background:rgba(201,168,108,0.08);border:1px solid rgba(255,255,255,0.07);text-align:center;min-width:110px">
+            <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--copper);letter-spacing:0.1em;text-transform:uppercase;line-height:1.5">Results<br>streamed live</div>
+          </div>
+          <div style="color:var(--t4);font-size:16px;padding:0 6px;flex-shrink:0">→</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:0;flex-shrink:0">
+          <div style="padding:10px 16px;border-radius:10px;background:rgba(201,168,108,0.06);border:1px solid rgba(255,255,255,0.07);text-align:center;min-width:110px">
+            <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--copper);letter-spacing:0.1em;text-transform:uppercase;line-height:1.5">Syllabus Builder<br>background</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     SLIDE 11 — FULL PRODUCT SCREENSHOT
+════════════════════════════════════════════════════════════════════════ -->
+<div class="slide" data-slide="11">
+  <div class="slide-topbar">
+    <div class="slide-topbar-logo">
+      <img class="logo-mark small" src="pathonlogo.png" alt="Pathon" /><span>Pathon</span>
+    </div>
+    <span class="mono-label" style="color:var(--copper)">Live Product</span>
+  </div>
+
+  <div class="w-full" style="text-align:center">
+    <p class="eyebrow copper" style="margin-bottom:12px">Live at hawkathon 2026</p>
+    <h2 class="h-section" style="margin-bottom:28px">
+      The full product.<br><span style="color:var(--copper)">Ready right now.</span>
+    </h2>
+
+    <!-- IMAGE SLOT: Full landing page screenshot -->
+    <div class="img-slot" style="height:380px; margin-bottom:20px">
+      <!--
+        HOW TO REPLACE:
+          <img src="screenshots/full-landing.png" alt="Pathon Landing Page" />
+      -->
+      <div style="text-align:center; color:var(--t4)">
+        <div style="font-size:32px; margin-bottom:12px">🌐</div>
+        <div class="mono-label">Full landing page — main site screenshot</div>
+      </div>
+      <div class="placeholder-label">📸 screenshot/full-landing.png</div>
+    </div>
+
+    <div style="display:flex;justify-content:center;gap:40px;flex-wrap:wrap">
+      <div class="stat-box">
+        <div class="stat-num" style="color:var(--copper)">13+</div>
+        <div class="stat-label">AI tools</div>
+      </div>
+      <div class="divider"></div>
+      <div class="stat-box">
+        <div class="stat-num" style="color:var(--indigo)">2</div>
+        <div class="stat-label">full dashboards</div>
+      </div>
+      <div class="divider"></div>
+      <div class="stat-box">
+        <div class="stat-num" style="color:var(--green)">3</div>
+        <div class="stat-label">AI agents per analysis</div>
+      </div>
+      <div class="divider"></div>
+      <div class="stat-box">
+        <div class="stat-num" style="color:var(--copper)">~10s</div>
+        <div class="stat-label">full gap analysis</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     SLIDE 12 — THE CLOSE
+════════════════════════════════════════════════════════════════════════ -->
+<div class="slide" data-slide="12">
+  <div class="slide-topbar">
+    <div class="slide-topbar-logo">
+      <img class="logo-mark small" src="pathonlogo.png" alt="Pathon" /><span>Pathon</span>
+    </div>
+    <span class="mono-label" style="color:var(--copper)">Hawkathon 2026</span>
+  </div>
+
+  <div style="text-align:center; max-width:780px">
+    <img class="logo-mark" src="pathonlogo.png" alt="Pathon" style="margin: 0 auto 32px; width:64px;height:64px;border-radius:18px;
+      box-shadow:0 0 60px rgba(201,168,108,0.3), 0 0 120px rgba(124,133,245,0.15)" />
+
+    <p class="eyebrow copper" style="margin-bottom:16px">One system. Both sides. Live.</p>
+
+    <h1 class="h-giant" style="margin-bottom:32px; font-size:clamp(2.2rem,4.5vw,4rem)">
+      "Every tool is connected.<br>
+      Nothing is <span class="accent-copper">generic.</span><br>
+      It works right now."
+    </h1>
+
+    <div class="glow-line" style="max-width:440px; margin: 0 auto 36px"></div>
+
+    <p class="body-text" style="max-width:540px; margin: 0 auto 40px; font-size:1rem">
+      Pathon reasons about your career over time — on both sides of
+      every hire. Built in 48 hours. Production-ready. Live.
+    </p>
+
+    <div style="display:inline-flex;gap:12px;flex-wrap:wrap;justify-content:center">
+      <div style="padding:10px 22px;border-radius:12px;background:rgba(201,168,108,0.12);border:1px solid rgba(201,168,108,0.3)">
+        <span style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.1em;color:var(--copper)">Next.js · Supabase · Claude</span>
+      </div>
+      <div style="padding:10px 22px;border-radius:12px;background:rgba(124,133,245,0.12);border:1px solid rgba(124,133,245,0.3)">
+        <span style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.1em;color:var(--indigo)">SSE Streaming · 3-Agent Pipeline</span>
+      </div>
+      <div style="padding:10px 22px;border-radius:12px;background:rgba(90,138,106,0.12);border:1px solid rgba(90,138,106,0.3)">
+        <span style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.1em;color:var(--green)">Built in 48 hours</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /deck -->
+
+<script>
+const slides = Array.from(document.querySelectorAll('.slide'));
+const total = slides.length;
+let current = 0;
+
+document.getElementById('tot').textContent = total;
+
+function updateCounter() {
+  document.getElementById('cur').textContent = current + 1;
+  document.getElementById('progress').style.width = ((current + 1) / total * 100) + '%';
+}
+
+function showSlide(idx) {
+  slides[current].classList.remove('active');
+  slides[current].classList.add('exit');
+  setTimeout(() => {
+    if (slides[current]) slides[current].classList.remove('exit');
+  }, 450);
+  current = Math.max(0, Math.min(idx, total - 1));
+  slides[current].classList.add('active');
+  updateCounter();
+}
+
+function go(dir) { showSlide(current + dir); }
+
+// Init
+slides[0].classList.add('active');
+updateCounter();
+
+// Keyboard
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); go(1); }
+  if (e.key === 'ArrowLeft')  { e.preventDefault(); go(-1); }
+  if (e.key === 'ArrowDown')  { e.preventDefault(); go(1); }
+  if (e.key === 'ArrowUp')    { e.preventDefault(); go(-1); }
+});
+
+// Click right half = next, left half = prev
+document.getElementById('deck').addEventListener('click', e => {
+  if (e.target.closest('.nav-btn')) return;
+  if (e.clientX > window.innerWidth / 2) go(1); else go(-1);
+});
+
+// Swipe
+let startX = 0;
+document.addEventListener('touchstart', e => { startX = e.touches[0].clientX; });
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - startX;
+  if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1);
+});
+</script>
+</body>
+</html>
