@@ -36,7 +36,7 @@ const PAGE_NAMES: Record<string, string> = {
 };
 
 const HIDE_ON = ["/", "/auth/callback", "/onboarding"];
-const HIDE_PREFIX = ["/employer"];
+const HIDE_PREFIX = ["/employer", "/demo"];
 
 // Mobile nav sections
 const MOBILE_NAV_SECTIONS = [
@@ -124,7 +124,7 @@ export function TopNav() {
           alignItems: "center",
           justifyContent: "space-between",
           padding: "0 1.5rem",
-          paddingLeft: "calc(var(--sidebar-w, 80px) + 1.5rem)",
+          paddingLeft: "calc(var(--sidebar-w, 68px) + 1.5rem)",
           borderBottom: "1px solid transparent",
           WebkitBackdropFilter: active ? "blur(20px)" : "blur(10px)",
         }}
@@ -205,7 +205,7 @@ export function TopNav() {
         >
           <span style={{
             fontFamily: "'Inter', system-ui, sans-serif",
-            fontSize: "13px",
+            fontSize: "14px",
             color: "var(--text-3)",
             fontWeight: 400,
           }}>
@@ -213,7 +213,7 @@ export function TopNav() {
           </span>
           <span style={{
             fontFamily: "'Inter', system-ui, sans-serif",
-            fontSize: "13px",
+            fontSize: "14px",
             fontWeight: 500,
             color: "var(--text-2)",
             letterSpacing: "-0.01em",

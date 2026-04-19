@@ -58,7 +58,8 @@
 
   /* Layout */
   --nav-h:     56px;
-  --sidebar-w: 80px;
+  --sidebar-w: 68px;
+  --sidebar-expanded: 220px;
 }
 
 /* ── Light Theme Overrides ───────────────────────────────────────────────────── */
@@ -125,8 +126,8 @@ body {
   margin: 0;
   padding: 0;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  font-size: 15px;
-  line-height: 1.6;
+  font-size: 16px;
+  line-height: 1.65;
   overflow-x: hidden;
 }
 
@@ -200,6 +201,20 @@ body::before {
   font-style: normal;
   font-weight: 600;
   letter-spacing: -0.02em;
+}
+
+/* ── Global readability improvements ────────────────────────────────────────── */
+
+/* Ensure paragraph and list text is comfortably readable */
+.page-shell p,
+main p {
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+main li {
+  font-size: 15px;
+  line-height: 1.7;
 }
 
 /* ── Layout helpers ─────────────────────────────────────────────────────────── */
@@ -1132,6 +1147,18 @@ body::after {
   button[aria-label="Open command palette"] {
     display: none !important;
   }
+}
+
+/* ── Sidebar layout-shift transitions ────────────────────────────────────────── */
+/* When --sidebar-w changes via JS, these elements smooth-shift their left edge */
+@property --sidebar-w {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 68px;
+}
+
+[style*="var(--sidebar-w"] {
+  transition: padding-left 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════

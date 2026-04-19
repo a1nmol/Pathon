@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * CoverLetterGenerator — cinematic redesign
+ * CoverLetterGenerator — two-column split layout redesign
  * Keeps all logic (generateCover action) intact.
  */
 
@@ -118,7 +118,7 @@ function CopyButton({ text, label, small }: { text: string; label: string; small
   );
 }
 
-// ── Loading state — typewriter effect ───────────────────────────────────────
+// ── Loading state ────────────────────────────────────────────────────────────
 function LoadingState() {
   const MESSAGES = [
     "Crafting your letter…",
@@ -145,12 +145,12 @@ function LoadingState() {
       exit={{ opacity: 0, y: -8 }}
       transition={{ duration: 0.4, ease: EASE_OUT }}
       style={{
-        padding: "2.5rem",
+        padding: "2rem",
         background: "rgba(19,21,28,0.7)",
         border: "1px solid rgba(255,255,255,0.07)",
         borderRadius: "16px",
         backdropFilter: "blur(24px)",
-        marginBottom: "1.5rem",
+        marginTop: "1.5rem",
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1.5rem" }}>
@@ -180,12 +180,10 @@ function LoadingState() {
         }}>|</span>
       </div>
 
-      {/* Skeleton letter lines */}
       <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
         {[88, 72, 94, 60, 80, 45, 86, 66, 50].map((width, i) => (
           <motion.div
             key={i}
-            initial={{ opacity: 0, x: -12 }}
             animate={{ opacity: [0.12, 0.32, 0.12] }}
             transition={{
               duration: 1.8,
@@ -224,7 +222,7 @@ function GlassInput({
 }) {
   const [focused, setFocused] = useState(false);
   return (
-    <div style={{ flex: 1 }}>
+    <div style={{ marginBottom: "1.5rem" }}>
       <label
         htmlFor={id}
         style={{
@@ -298,17 +296,15 @@ function AnimatedParagraph({ text, index, isFirst }: { text: string; index: numb
   );
 }
 
-// ── ResultView ───────────────────────────────────────────────────────────────
+// ── ResultView (right panel) ─────────────────────────────────────────────────
 function ResultView({
   result,
   company,
   role,
-  onReset,
 }: {
   result: CoverLetterResult;
   company: string;
   role: string;
-  onReset: () => void;
 }) {
   const fullText = `Subject: ${result.subject_line}\n\n${result.body}`;
   const paragraphs = result.body.split("\n\n").filter(Boolean);
@@ -318,8 +314,9 @@ function ResultView({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.45 }}
+      style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}
     >
-      {/* ── Action bar ───────────────────────────────────────────────── */}
+      {/* ── Floating action bar ───────────────────────────────────────── */}
       <motion.div
         initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -327,53 +324,39 @@ function ResultView({
         style={{
           display: "flex",
           alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: "1.5rem",
-          gap: "1rem",
+          justifyContent: "flex-end",
+          gap: "0.6rem",
+          padding: "0.75rem 1rem",
+          background: "rgba(13,15,24,0.8)",
+          border: "1px solid rgba(255,255,255,0.07)",
+          borderRadius: "12px",
+          backdropFilter: "blur(12px)",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <motion.button
-            whileHover={{ x: -3 }}
-            onClick={onReset}
-            style={{
-              background: "none", border: "none", padding: 0, cursor: "pointer",
-              fontSize: "12px", letterSpacing: "0.06em",
-              color: "rgba(255,255,255,0.28)",
-              fontFamily: "'DM Mono', monospace",
-              display: "flex", alignItems: "center", gap: "0.4rem",
-            }}
-          >
-            ← generate another
-          </motion.button>
-        </div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-          <CopyButton text={result.subject_line} label="copy subject" small />
-          <CopyButton text={fullText} label="copy letter" small />
-          <motion.button
-            onClick={() => downloadCoverLetterPDF(result.body, company, role, result.subject_line)}
-            whileHover={{ scale: 1.04 }}
-            whileTap={{ scale: 0.96 }}
-            style={{
-              background: "rgba(201,168,108,0.1)",
-              border: "1px solid rgba(201,168,108,0.28)",
-              borderRadius: "100px",
-              color: "rgba(201,168,108,0.8)",
-              fontSize: "10px",
-              letterSpacing: "0.06em",
-              fontFamily: "'DM Mono', monospace",
-              padding: "5px 13px",
-              cursor: "pointer",
-              display: "flex", alignItems: "center", gap: "5px",
-            }}
-          >
-            <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M8 2v8M5 7l3 3 3-3"/><path d="M2 12h12"/>
-            </svg>
-            PDF
-          </motion.button>
-        </div>
+        <CopyButton text={result.subject_line} label="copy subject" small />
+        <CopyButton text={fullText} label="copy letter" small />
+        <motion.button
+          onClick={() => downloadCoverLetterPDF(result.body, company, role, result.subject_line)}
+          whileHover={{ scale: 1.04 }}
+          whileTap={{ scale: 0.96 }}
+          style={{
+            background: "rgba(201,168,108,0.1)",
+            border: "1px solid rgba(201,168,108,0.28)",
+            borderRadius: "100px",
+            color: "rgba(201,168,108,0.8)",
+            fontSize: "10px",
+            letterSpacing: "0.06em",
+            fontFamily: "'DM Mono', monospace",
+            padding: "5px 13px",
+            cursor: "pointer",
+            display: "flex", alignItems: "center", gap: "5px",
+          }}
+        >
+          <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M8 2v8M5 7l3 3 3-3"/><path d="M2 12h12"/>
+          </svg>
+          PDF
+        </motion.button>
       </motion.div>
 
       {/* ── Paper — two-column document layout ───────────────────────── */}
@@ -389,7 +372,7 @@ function ResultView({
           position: "relative",
           overflow: "hidden",
           display: "grid",
-          gridTemplateColumns: "320px 1fr",
+          gridTemplateColumns: "280px 1fr",
           minHeight: "600px",
         }}
       >
@@ -485,7 +468,7 @@ function ResultView({
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.25, ease: EASE_OUT }}
           style={{
-            padding: "3rem 3.5rem 3rem 3rem",
+            padding: "3rem 3rem 3rem 2.5rem",
             position: "relative",
             zIndex: 1,
           }}
@@ -496,6 +479,178 @@ function ResultView({
         </motion.div>
       </motion.div>
     </motion.div>
+  );
+}
+
+// ── CL Visualizer — floating content blocks ─────────────────────────────────
+const CL_BLOCKS = [
+  { label: "Experience", icon: "◈", color: "rgba(201,168,108,0.8)", dim: "rgba(201,168,108,0.12)", border: "rgba(201,168,108,0.25)", field: "profile" },
+  { label: "Skills",     icon: "◇", color: "rgba(90,138,106,0.8)",  dim: "rgba(90,138,106,0.1)",   border: "rgba(90,138,106,0.22)",  field: "profile" },
+  { label: "Role",       icon: "◉", color: "rgba(124,133,245,0.8)", dim: "rgba(124,133,245,0.1)",  border: "rgba(124,133,245,0.22)", field: "role" },
+  { label: "Tone",       icon: "◌", color: "rgba(255,255,255,0.5)", dim: "rgba(255,255,255,0.05)", border: "rgba(255,255,255,0.1)",  field: "none" },
+];
+
+// Gentle floating orbits (each block has a different phase)
+const ORBITS = [
+  { x: -80, y: -60 },
+  { x: 80,  y: -50 },
+  { x: -60, y: 60  },
+  { x: 70,  y: 55  },
+];
+
+function CLVisualizer({
+  hasCompany,
+  hasRole,
+  hasJd,
+  generating,
+}: {
+  hasCompany: boolean;
+  hasRole: boolean;
+  hasJd: boolean;
+  generating: boolean;
+}) {
+  const active = [true, true, hasRole || hasCompany, hasJd];
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        height: "100%",
+        gap: "2rem",
+      }}
+    >
+      {/* Blocks */}
+      <div style={{ position: "relative", width: 280, height: 260 }}>
+        {/* Center merge target */}
+        <motion.div
+          animate={{
+            opacity: generating ? 1 : 0.08,
+            scale: generating ? 1 : 0.85,
+          }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          style={{
+            position: "absolute",
+            left: "50%",
+            top: "50%",
+            transform: "translate(-50%, -50%)",
+            width: 60,
+            height: 72,
+            background: "rgba(201,168,108,0.12)",
+            border: "1.5px dashed rgba(201,168,108,0.35)",
+            borderRadius: 8,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="rgba(201,168,108,0.6)" strokeWidth="1.5" strokeLinecap="round">
+            <path d="M5 2h7l4 4v12a1 1 0 01-1 1H5a1 1 0 01-1-1V3a1 1 0 011-1z" />
+            <path d="M12 2v4h4" />
+          </svg>
+        </motion.div>
+
+        {CL_BLOCKS.map((block, i) => {
+          const orbit = ORBITS[i];
+          const isActive = active[i];
+
+          return (
+            <motion.div
+              key={block.label}
+              animate={
+                generating
+                  ? { x: 0, y: 0, scale: 0.7, opacity: 0 }
+                  : {
+                      x: [orbit.x, orbit.x + (i % 2 === 0 ? 5 : -5), orbit.x],
+                      y: [orbit.y, orbit.y + (i < 2 ? -4 : 4), orbit.y],
+                      scale: isActive ? 1 : 0.9,
+                      opacity: isActive ? 1 : 0.4,
+                    }
+              }
+              transition={
+                generating
+                  ? { duration: 0.5, ease: [0.22, 1, 0.36, 1] }
+                  : {
+                      x: { duration: 6 + i * 0.8, repeat: Infinity, ease: "easeInOut" },
+                      y: { duration: 7 + i * 0.6, repeat: Infinity, ease: "easeInOut" },
+                      scale: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
+                      opacity: { duration: 0.5 },
+                    }
+              }
+              style={{
+                position: "absolute",
+                left: "50%",
+                top: "50%",
+                marginLeft: -44,
+                marginTop: -28,
+                width: 88,
+                height: 56,
+                background: block.dim,
+                border: `1px solid ${isActive ? block.border : "rgba(255,255,255,0.06)"}`,
+                borderRadius: 10,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 4,
+                boxShadow: isActive
+                  ? `0 0 16px ${block.dim}, 0 4px 12px rgba(0,0,0,0.2)`
+                  : "none",
+                transition: "border-color 0.4s, box-shadow 0.4s",
+              }}
+            >
+              <span style={{ fontSize: 14, color: isActive ? block.color : "rgba(255,255,255,0.2)", lineHeight: 1 }}>
+                {block.icon}
+              </span>
+              <span
+                style={{
+                  fontFamily: "'DM Mono', monospace",
+                  fontSize: 8,
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  color: isActive ? block.color : "rgba(255,255,255,0.2)",
+                  lineHeight: 1,
+                  transition: "color 0.4s",
+                }}
+              >
+                {block.label}
+              </span>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      {/* Helper text */}
+      <div style={{ textAlign: "center" }}>
+        <p
+          style={{
+            fontFamily: "'DM Mono', monospace",
+            fontSize: 10,
+            letterSpacing: "0.14em",
+            textTransform: "uppercase",
+            color: "rgba(255,255,255,0.15)",
+            margin: "0 0 0.4rem",
+          }}
+        >
+          {generating ? "Composing…" : "Awaiting generation"}
+        </p>
+        <p
+          style={{
+            fontFamily: "'Inter', sans-serif",
+            fontSize: 13,
+            color: "rgba(255,255,255,0.22)",
+            margin: 0,
+            lineHeight: 1.6,
+          }}
+        >
+          {generating
+            ? "Merging your context into a letter"
+            : "Blocks activate as you fill in details"}
+        </p>
+      </div>
+    </div>
   );
 }
 
@@ -553,261 +708,203 @@ export function CoverLetterGenerator() {
   }
 
   return (
-    <div className="mobile-page-wrap" style={{
-      background: "var(--bg)",
-      minHeight: "100vh",
-      paddingLeft: "var(--sidebar-w, 60px)",
-    }}>
+    <>
+      <style>{`@keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(200%); } }`}</style>
       <div style={{
-        maxWidth: result ? "1200px" : "720px",
-        margin: "0 auto",
-        padding: "calc(56px + 4rem) 5vw 8rem",
-        transition: "max-width 0.55s cubic-bezier(0.22, 1, 0.36, 1)",
+        position: "fixed",
+        inset: 0,
+        paddingLeft: "var(--sidebar-w, 68px)",
+        /* layout shift is handled via CSS var transition in globals.css */
+        paddingTop: "56px",
+        display: "grid",
+        gridTemplateColumns: "700px 1fr",
+        overflow: "hidden",
       }}>
-        {/* ── Header ─────────────────────────────────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: EASE_OUT }}
-          style={{ marginBottom: "3rem" }}
-        >
-          <p style={{
-            fontFamily: "'DM Mono', monospace",
-            fontSize: "9px",
-            letterSpacing: "0.2em",
-            textTransform: "uppercase",
-            color: "rgba(201,168,108,0.5)",
-            margin: "0 0 0.75rem",
-          }}>
-            Cover Letter
-          </p>
-          <h1 style={{
-            fontFamily: "'Poppins', system-ui, sans-serif",
-            fontSize: "clamp(1.8rem, 4vw, 2.8rem)",
-            fontWeight: 300,
-            color: "rgba(255,255,255,0.92)",
-            margin: "0 0 0.75rem",
-            letterSpacing: "-0.03em",
-            lineHeight: 1.1,
-          }}>
-            Cover Letter
-          </h1>
-          <p style={{
-            fontFamily: "'Inter', sans-serif",
-            fontSize: "14px",
-            color: "rgba(255,255,255,0.35)",
-            lineHeight: 1.7,
-            margin: 0,
-          }}>
-            Built from your actual data — not a template.
-          </p>
-        </motion.div>
+        {/* ── Left column — form panel ────────────────────────────────── */}
+        <div style={{
+          background: "linear-gradient(160deg, rgba(13,15,24,0.98) 0%, rgba(9,11,18,0.98) 100%)",
+          borderRight: "1px solid rgba(255,255,255,0.05)",
+          overflowY: "auto",
+          padding: "3rem 2rem",
+        }}>
+          {/* Header */}
+          <div style={{ marginBottom: "2.5rem" }}>
+            <p style={{
+              fontFamily: "'DM Mono', monospace",
+              fontSize: "9px",
+              letterSpacing: "0.2em",
+              textTransform: "uppercase",
+              color: "rgba(201,168,108,0.6)",
+              margin: "0 0 0.75rem",
+            }}>
+              Cover Letter
+            </p>
+            <h1 style={{
+              fontFamily: "'Poppins', system-ui, sans-serif",
+              fontSize: "clamp(1.5rem, 2.5vw, 2rem)",
+              fontWeight: 300,
+              color: "rgba(255,255,255,0.92)",
+              margin: 0,
+              letterSpacing: "-0.03em",
+              lineHeight: 1.15,
+            }}>
+              Write once. Apply everywhere.
+            </h1>
+          </div>
 
-        {/* ── Form / Result ──────────────────────────────────────────── */}
-        <AnimatePresence mode="wait">
-          {!result ? (
-            <motion.div
-              key="form"
+          {/* Inputs */}
+          <GlassInput
+            label="Company"
+            id={companyId}
+            value={company}
+            onChange={setCompany}
+            placeholder="Stripe, Notion, Acme…"
+            disabled={isPending}
+          />
+          <GlassInput
+            label="Role Title"
+            id={roleId}
+            value={role}
+            onChange={setRole}
+            placeholder="Senior Product Designer"
+            disabled={isPending}
+          />
+
+          {/* JD Textarea */}
+          <div style={{ marginBottom: "1.5rem" }}>
+            <label
+              htmlFor={jdId}
+              style={{
+                display: "block",
+                fontFamily: "'DM Mono', monospace",
+                fontSize: "9px",
+                letterSpacing: "0.16em",
+                textTransform: "uppercase",
+                color: jdFocused ? "rgba(201,168,108,0.6)" : "rgba(255,255,255,0.2)",
+                marginBottom: "6px",
+                transition: "color 0.25s",
+              }}
+            >
+              Job Description
+            </label>
+            <textarea
+              id={jdId}
+              value={jd}
+              onChange={(e) => setJd(e.target.value)}
+              disabled={isPending}
+              onFocus={() => setJdFocused(true)}
+              onBlur={() => setJdFocused(false)}
+              placeholder="Paste the full job description here…"
+              style={{
+                width: "100%",
+                minHeight: "260px",
+                background: "rgba(255,255,255,0.03)",
+                border: `1.5px solid ${jdFocused ? "#c9a86c" : "rgba(255,255,255,0.08)"}`,
+                borderRadius: "10px",
+                color: "rgba(255,255,255,0.75)",
+                fontFamily: "'Inter', sans-serif",
+                fontSize: "14px",
+                lineHeight: 1.75,
+                padding: "0.75rem 1rem",
+                resize: "vertical",
+                outline: "none",
+                boxSizing: "border-box",
+                opacity: isPending ? 0.4 : 1,
+                transition: "border-color 0.25s, opacity 0.2s",
+              }}
+            />
+          </div>
+
+          {/* Error */}
+          {error && (
+            <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.35 }}
+              style={{
+                fontSize: "13px",
+                color: "#e05c5c",
+                fontFamily: "'Inter', sans-serif",
+                marginBottom: "1.25rem",
+                padding: "0.75rem 1rem",
+                background: "rgba(224,92,92,0.07)",
+                border: "1px solid rgba(224,92,92,0.18)",
+                borderRadius: "10px",
+              }}
             >
-              {/* Company + Role — inline row */}
-              <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1, ease: EASE_OUT }}
-                style={{
-                  display: "flex",
-                  gap: "2rem",
-                  background: "rgba(19,21,28,0.6)",
-                  border: "1px solid rgba(255,255,255,0.07)",
-                  borderRadius: "16px",
-                  padding: "1.25rem 1.5rem",
-                  marginBottom: "1.25rem",
-                  backdropFilter: "blur(20px)",
-                }}
-              >
-                <GlassInput
-                  label="Company"
-                  id={companyId}
-                  value={company}
-                  onChange={setCompany}
-                  placeholder="Stripe, Notion, Acme…"
-                  disabled={isPending}
-                />
-                <div style={{
-                  width: "1px",
-                  background: "rgba(255,255,255,0.07)",
-                  alignSelf: "stretch",
-                  flexShrink: 0,
-                }} />
-                <GlassInput
-                  label="Role Title"
-                  id={roleId}
-                  value={role}
-                  onChange={setRole}
-                  placeholder="Senior Product Designer"
-                  disabled={isPending}
-                />
-              </motion.div>
-
-              {/* JD Textarea */}
-              <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.18, ease: EASE_OUT }}
-                style={{
-                  background: jdFocused ? "rgba(19,21,28,0.9)" : "rgba(19,21,28,0.6)",
-                  border: jdFocused
-                    ? "1px solid rgba(201,168,108,0.3)"
-                    : "1px solid rgba(255,255,255,0.07)",
-                  borderRadius: "16px",
-                  backdropFilter: "blur(20px)",
-                  overflow: "hidden",
-                  marginBottom: "1.5rem",
-                  transition: "background 0.25s, border-color 0.25s, box-shadow 0.25s",
-                  boxShadow: jdFocused
-                    ? "0 0 0 3px rgba(201,168,108,0.07), 0 8px 32px rgba(0,0,0,0.25)"
-                    : "0 4px 16px rgba(0,0,0,0.12)",
-                }}
-              >
-                <label
-                  htmlFor={jdId}
-                  style={{
-                    display: "block",
-                    fontFamily: "'DM Mono', monospace",
-                    fontSize: "9px",
-                    letterSpacing: "0.16em",
-                    textTransform: "uppercase",
-                    color: jdFocused ? "rgba(201,168,108,0.6)" : "rgba(255,255,255,0.2)",
-                    padding: "1.1rem 1.25rem 0",
-                    transition: "color 0.25s",
-                  }}
-                >
-                  Job Description
-                </label>
-                <textarea
-                  id={jdId}
-                  value={jd}
-                  onChange={(e) => setJd(e.target.value)}
-                  disabled={isPending}
-                  onFocus={() => setJdFocused(true)}
-                  onBlur={() => setJdFocused(false)}
-                  placeholder="Paste the full job description here…"
-                  style={{
-                    width: "100%",
-                    minHeight: "200px",
-                    background: "transparent",
-                    border: "none",
-                    color: "rgba(255,255,255,0.75)",
-                    fontFamily: "'Inter', sans-serif",
-                    fontSize: "14px",
-                    lineHeight: 1.75,
-                    padding: "0.75rem 1.25rem 1.25rem",
-                    resize: "vertical",
-                    outline: "none",
-                    boxSizing: "border-box",
-                    opacity: isPending ? 0.4 : 1,
-                    transition: "opacity 0.2s",
-                  }}
-                />
-              </motion.div>
-
-              {/* Loading state */}
-              <AnimatePresence>
-                {isPending && <LoadingState />}
-              </AnimatePresence>
-
-              {/* Error */}
-              {error && (
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  style={{
-                    fontSize: "13px",
-                    color: "#e05c5c",
-                    fontFamily: "'Inter', sans-serif",
-                    marginBottom: "1.25rem",
-                    marginTop: isPending ? "1.25rem" : 0,
-                    padding: "0.75rem 1rem",
-                    background: "rgba(224,92,92,0.07)",
-                    border: "1px solid rgba(224,92,92,0.18)",
-                    borderRadius: "10px",
-                  }}
-                >
-                  {error}
-                </motion.p>
-              )}
-
-              {/* Generate button — magnetic + copper gradient */}
-              {!isPending && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.25, duration: 0.4 }}
-                >
-                  <button
-                    ref={btnRef}
-                    onClick={handleGenerate}
-                    disabled={!isReady}
-                    onMouseEnter={() => setBtnHovered(true)}
-                    onMouseMove={isReady ? handleBtnMouseMove : undefined}
-                    onMouseLeave={handleBtnMouseLeave}
-                    style={{
-                      width: "100%",
-                      background: isReady
-                        ? "linear-gradient(135deg, #c9a86c 0%, #a8834e 100%)"
-                        : "rgba(255,255,255,0.04)",
-                      border: isReady ? "none" : "1px solid rgba(255,255,255,0.08)",
-                      borderRadius: "14px",
-                      padding: "1.1rem",
-                      fontFamily: "'Inter', sans-serif",
-                      fontSize: "15px",
-                      fontWeight: 600,
-                      color: isReady ? "#1a1208" : "rgba(255,255,255,0.18)",
-                      cursor: isReady ? "pointer" : "default",
-                      transition: "background 0.3s, color 0.3s, transform 0.2s, box-shadow 0.3s",
-                      boxShadow: isReady && btnHovered
-                        ? "0 16px 50px rgba(201,168,108,0.4)"
-                        : isReady
-                        ? "0 6px 24px rgba(201,168,108,0.2)"
-                        : "none",
-                      position: "relative",
-                      overflow: "hidden",
-                    }}
-                  >
-                    {/* Shimmer effect */}
-                    {isReady && (
-                      <motion.div
-                        animate={{ x: ["-100%", "200%"] }}
-                        transition={{ duration: 2.8, repeat: Infinity, ease: "linear", repeatDelay: 0.8 }}
-                        style={{
-                          position: "absolute",
-                          inset: 0,
-                          background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent)",
-                          pointerEvents: "none",
-                        }}
-                      />
-                    )}
-                    Generate Cover Letter →
-                  </button>
-                </motion.div>
-              )}
-            </motion.div>
-          ) : (
-            <motion.div
-              key="result"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.55, ease: EASE_OUT }}
-            >
-              <ResultView result={result} company={company} role={role} onReset={() => setResult(null)} />
-            </motion.div>
+              {error}
+            </motion.p>
           )}
-        </AnimatePresence>
+
+          {/* Loading state in left panel */}
+          <AnimatePresence>
+            {isPending && <LoadingState />}
+          </AnimatePresence>
+
+          {/* Generate button */}
+          {!isPending && (
+            <button
+              ref={btnRef}
+              onClick={handleGenerate}
+              disabled={!isReady}
+              onMouseEnter={() => setBtnHovered(true)}
+              onMouseMove={isReady ? handleBtnMouseMove : undefined}
+              onMouseLeave={handleBtnMouseLeave}
+              style={{
+                width: "100%",
+                background: isReady
+                  ? "linear-gradient(135deg, #c9a86c 0%, #a8834e 100%)"
+                  : "rgba(255,255,255,0.04)",
+                border: isReady ? "none" : "1px solid rgba(255,255,255,0.08)",
+                borderRadius: "14px",
+                padding: "1.1rem",
+                fontFamily: "'Inter', sans-serif",
+                fontSize: "15px",
+                fontWeight: 600,
+                color: isReady ? "#1a1208" : "rgba(255,255,255,0.18)",
+                cursor: isReady ? "pointer" : "default",
+                transition: "background 0.3s, color 0.3s, transform 0.2s, box-shadow 0.3s",
+                boxShadow: isReady && btnHovered
+                  ? "0 16px 50px rgba(201,168,108,0.4)"
+                  : isReady
+                  ? "0 6px 24px rgba(201,168,108,0.2)"
+                  : "none",
+                position: "relative",
+                overflow: "hidden",
+                marginTop: "0.5rem",
+              }}
+            >
+              {isReady && (
+                <div style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent)",
+                  animation: "shimmer 2.8s linear infinite",
+                  pointerEvents: "none",
+                }} />
+              )}
+              Generate Cover Letter →
+            </button>
+          )}
+        </div>
+
+        {/* ── Right column — preview/result panel ─────────────────────── */}
+        <div style={{
+          background: "#0a0c14",
+          overflowY: "auto",
+          padding: "3rem",
+        }}>
+          {!result ? (
+            <CLVisualizer
+              hasCompany={company.trim().length > 0}
+              hasRole={role.trim().length > 0}
+              hasJd={jd.trim().length >= 30}
+              generating={isPending}
+            />
+          ) : (
+            <ResultView result={result} company={company} role={role} />
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

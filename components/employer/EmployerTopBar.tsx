@@ -61,7 +61,8 @@ export function EmployerTopBar() {
         alignItems: "center",
         justifyContent: "space-between",
         padding: "0 1.5rem",
-        paddingLeft: "calc(var(--sidebar-w, 80px) + 1.5rem)",
+        paddingLeft: "calc(var(--sidebar-w, 68px) + 1.5rem)",
+        transition: "padding-left 0.35s cubic-bezier(0.22, 1, 0.36, 1)",
         borderBottom: "1px solid transparent",
         WebkitBackdropFilter: active ? "blur(20px)" : "blur(10px)",
       }}
@@ -107,7 +108,7 @@ export function EmployerTopBar() {
       }}>
         <span style={{
           fontFamily: "'Inter', system-ui, sans-serif",
-          fontSize: "13px",
+          fontSize: "14px",
           color: "var(--text-3)",
           fontWeight: 400,
         }}>
@@ -115,7 +116,7 @@ export function EmployerTopBar() {
         </span>
         <span style={{
           fontFamily: "'Inter', system-ui, sans-serif",
-          fontSize: "13px",
+          fontSize: "14px",
           fontWeight: 500,
           color: "var(--text-2)",
           letterSpacing: "-0.01em",

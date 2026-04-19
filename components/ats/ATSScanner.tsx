@@ -1,12 +1,12 @@
 "use client";
 
 /**
- * ATSScanner — cinematic redesign
+ * ATSScanner — full two-column layout redesign
  * Keeps all logic (scanResume action, state management) intact.
  */
 
 import { useState, useTransition, useId, useEffect, useRef } from "react";
-import { motion, AnimatePresence, useInView, type Variants } from "framer-motion";
+import { motion, AnimatePresence, useInView, useMotionValue, useSpring } from "framer-motion";
 import { scanResume } from "@/app/actions/ats";
 import type { ATSScanResult } from "@/types/ats";
 
@@ -85,8 +85,8 @@ function ScoreCircle({ score }: { score: number }) {
   const color = scoreColor(score);
   const displayScore = useCountUp(score, 1200, countEnabled);
 
-  const size = 160;
-  const strokeWidth = 10;
+  const size = 200;
+  const strokeWidth = 12;
   const r = (size - strokeWidth) / 2;
   const circ = 2 * Math.PI * r;
   const dash = circ * (score / 100);
@@ -105,7 +105,7 @@ function ScoreCircle({ score }: { score: number }) {
       flexDirection: "column",
       alignItems: "center",
       gap: "1rem",
-      marginBottom: "3rem",
+      marginBottom: "2rem",
       position: "relative",
     }}>
       {/* Particle burst */}
@@ -114,7 +114,7 @@ function ScoreCircle({ score }: { score: number }) {
           <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", pointerEvents: "none" }}>
             {Array.from({ length: 12 }).map((_, i) => {
               const angle = (i / 12) * 360;
-              const dist = 80 + Math.random() * 40;
+              const dist = 100 + Math.random() * 40;
               return (
                 <motion.div
                   key={i}
@@ -199,7 +199,7 @@ function ScoreCircle({ score }: { score: number }) {
             style={{
               fontFamily: "'Poppins', system-ui, sans-serif",
               fontWeight: 300,
-              fontSize: "2.8rem",
+              fontSize: "3.5rem",
               color,
               lineHeight: 1,
               display: "block",
@@ -264,7 +264,7 @@ function ScanningLoader() {
       exit={{ opacity: 0, y: -8 }}
       transition={{ duration: 0.4, ease: EASE_OUT }}
       style={{
-        padding: "2.5rem",
+        padding: "2rem",
         background: "rgba(19,21,28,0.7)",
         border: "1px solid rgba(255,255,255,0.07)",
         borderRadius: "16px",
@@ -273,14 +273,13 @@ function ScanningLoader() {
         textAlign: "center",
       }}
     >
-      {/* Bouncing scan line */}
       <div style={{
         width: "100%",
         height: "2px",
         background: "rgba(255,255,255,0.06)",
         borderRadius: "100px",
         overflow: "hidden",
-        marginBottom: "2rem",
+        marginBottom: "1.5rem",
         position: "relative",
       }}>
         <motion.div
@@ -298,7 +297,6 @@ function ScanningLoader() {
         />
       </div>
 
-      {/* Cycling label */}
       <AnimatePresence mode="wait">
         <motion.p
           key={labelIdx}
@@ -372,7 +370,6 @@ function AnimatedChip({
       }}>
         {label}
       </span>
-      {/* "Add to resume" tooltip for red chips */}
       <AnimatePresence>
         {variant === "red" && hovered && (
           <motion.div
@@ -407,100 +404,361 @@ function AnimatedChip({
   );
 }
 
-// ── Fix card ────────────────────────────────────────────────────────────────
+// ── Fix card (3D tilt) ──────────────────────────────────────────────────────
 function FixCard({ issue, fix, index }: { issue: string; fix: string; index: number }) {
-  const [expanded, setExpanded] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-40px" });
+  const rotateX = useMotionValue(0);
+  const rotateY = useMotionValue(0);
+  const spRX = useSpring(rotateX, { stiffness: 300, damping: 30 });
+  const spRY = useSpring(rotateY, { stiffness: 300, damping: 30 });
+
+  function handleMouseMove(e: React.MouseEvent<HTMLDivElement>) {
+    if (!ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    rotateX.set(((e.clientY - cy) / rect.height) * -10);
+    rotateY.set(((e.clientX - cx) / rect.width) * 10);
+  }
+
+  function handleMouseLeave() {
+    rotateX.set(0);
+    rotateY.set(0);
+  }
 
   return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 20 }}
-      animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.5, delay: index * 0.1, type: "spring", damping: 22, stiffness: 220 }}
-      onClick={() => setExpanded((v) => !v)}
-      whileHover={{ y: -2, boxShadow: "0 8px 30px rgba(0,0,0,0.3)" }}
-      style={{
-        background: "rgba(19,21,28,0.8)",
-        border: "1px solid rgba(255,255,255,0.07)",
-        borderRadius: "14px",
-        padding: "1.25rem 1.4rem",
-        marginBottom: "0.75rem",
-        cursor: "pointer",
-        backdropFilter: "blur(20px)",
-        boxShadow: "0 4px 16px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04)",
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "flex-start", gap: "1rem" }}>
-        {/* Number */}
-        <span style={{
-          fontFamily: "'DM Mono', monospace",
-          fontSize: "11px",
-          color: "rgba(255,255,255,0.2)",
-          letterSpacing: "0.06em",
-          flexShrink: 0,
-          marginTop: "1px",
-        }}>
-          {String(index + 1).padStart(2, "0")}
-        </span>
-        <div style={{ flex: 1 }}>
-          <p style={{
-            fontFamily: "'Inter', sans-serif",
-            fontSize: "13px",
-            color: "rgba(224,92,92,0.8)",
-            lineHeight: 1.6,
-            margin: "0 0 0.6rem",
+    <div style={{ perspective: "600px" }}>
+      <motion.div
+        ref={ref}
+        initial={{ opacity: 0, y: 20 }}
+        animate={inView ? { opacity: 1, y: 0 } : {}}
+        transition={{ duration: 0.5, delay: index * 0.1, type: "spring", damping: 22, stiffness: 220 }}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        style={{
+          rotateX: spRX,
+          rotateY: spRY,
+          background: "rgba(19,21,28,0.8)",
+          border: "1px solid rgba(255,255,255,0.07)",
+          borderRadius: "14px",
+          padding: "1.25rem 1.4rem",
+          marginBottom: "0.75rem",
+          cursor: "default",
+          backdropFilter: "blur(20px)",
+          boxShadow: "0 4px 16px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04)",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "flex-start", gap: "1rem" }}>
+          <span style={{
+            fontFamily: "'DM Mono', monospace",
+            fontSize: "11px",
+            color: "rgba(255,255,255,0.2)",
+            letterSpacing: "0.06em",
+            flexShrink: 0,
+            marginTop: "1px",
           }}>
-            {issue}
-          </p>
-          <AnimatePresence>
-            {expanded && (
-              <motion.p
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.25, ease: EASE_OUT }}
-                style={{
-                  fontFamily: "'Inter', sans-serif",
-                  fontSize: "13px",
-                  color: "rgba(90,138,106,0.9)",
-                  lineHeight: 1.6,
-                  margin: 0,
-                  overflow: "hidden",
-                }}
-              >
-                {fix}
-              </motion.p>
-            )}
-          </AnimatePresence>
-          {!expanded && (
+            {String(index + 1).padStart(2, "0")}
+          </span>
+          <div style={{ flex: 1 }}>
             <p style={{
               fontFamily: "'Inter', sans-serif",
-              fontSize: "12px",
-              color: "rgba(90,138,106,0.6)",
-              margin: 0,
-              lineHeight: 1.5,
+              fontSize: "13px",
+              color: "rgba(224,92,92,0.85)",
+              lineHeight: 1.6,
+              margin: "0 0 0.6rem",
             }}>
-              {fix.length > 80 ? fix.slice(0, 80) + "…" : fix}
+              {issue}
             </p>
-          )}
+            <div style={{
+              height: "1px",
+              background: "rgba(255,255,255,0.06)",
+              margin: "0.6rem 0",
+            }} />
+            <p style={{
+              fontFamily: "'Inter', sans-serif",
+              fontSize: "13px",
+              color: "rgba(90,138,106,0.9)",
+              lineHeight: 1.6,
+              margin: 0,
+            }}>
+              {fix}
+            </p>
+          </div>
         </div>
-        <span style={{
-          fontFamily: "'DM Mono', monospace",
-          fontSize: "9px",
-          color: "rgba(255,255,255,0.2)",
-          flexShrink: 0,
-          marginTop: "2px",
-        }}>
-          {expanded ? "−" : "+"}
-        </span>
-      </div>
-    </motion.div>
+      </motion.div>
+    </div>
   );
 }
 
-// ── Section label ───────────────────────────────────────────────────────────
+// ── ATS Visualizer — floating cards + keyword tokens ────────────────────────
+const SAMPLE_KEYWORDS = [
+  { label: "TypeScript", match: true },
+  { label: "React", match: true },
+  { label: "Node.js", match: true },
+  { label: "Leadership", match: true },
+  { label: "Agile", match: false },
+  { label: "Python", match: false },
+  { label: "SQL", match: true },
+  { label: "CI/CD", match: false },
+  { label: "REST API", match: true },
+];
+
+function ATSVisualizer({
+  jdFocused,
+  scanning,
+}: {
+  jdFocused: boolean;
+  scanning: boolean;
+}) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        height: "100%",
+        gap: "2rem",
+        padding: "2rem",
+      }}
+    >
+      {/* Cards + tokens row */}
+      <div
+        style={{
+          position: "relative",
+          width: "100%",
+          maxWidth: 480,
+          height: 260,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        {/* Resume card */}
+        <motion.div
+          animate={{
+            y: [0, -2, 0],
+          }}
+          transition={{
+            duration: 5,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+          style={{
+            width: 140,
+            background: "rgba(13,15,24,0.95)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: 12,
+            padding: "14px 16px",
+            flexShrink: 0,
+          }}
+        >
+          <div
+            style={{
+              fontFamily: "'DM Mono', monospace",
+              fontSize: 8,
+              letterSpacing: "0.14em",
+              textTransform: "uppercase",
+              color: "rgba(201,168,108,0.55)",
+              marginBottom: 10,
+            }}
+          >
+            Resume
+          </div>
+          {[88, 65, 82, 55, 72, 48, 78].map((w, i) => (
+            <div
+              key={i}
+              style={{
+                height: 5,
+                width: `${w}%`,
+                background: "rgba(201,168,108,0.2)",
+                borderRadius: 2,
+                marginBottom: 5,
+              }}
+            />
+          ))}
+          <div
+            style={{
+              marginTop: 8,
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+            }}
+          >
+            <div
+              style={{
+                width: 5,
+                height: 5,
+                borderRadius: "50%",
+                background: "rgba(90,138,106,0.7)",
+                boxShadow: "0 0 6px rgba(90,138,106,0.5)",
+              }}
+            />
+            <span
+              style={{
+                fontFamily: "'DM Mono', monospace",
+                fontSize: 7,
+                color: "rgba(90,138,106,0.6)",
+                letterSpacing: "0.06em",
+              }}
+            >
+              indexed
+            </span>
+          </div>
+        </motion.div>
+
+        {/* Keyword tokens — center column */}
+        <div
+          style={{
+            flex: 1,
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 6,
+            justifyContent: "center",
+            padding: "0 12px",
+          }}
+        >
+          {SAMPLE_KEYWORDS.map((kw, i) => (
+            <motion.div
+              key={kw.label}
+              animate={{
+                y: [0, i % 2 === 0 ? -2 : 2, 0],
+              }}
+              transition={{
+                duration: 4 + i * 0.4,
+                delay: i * 0.15,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+              style={{
+                fontFamily: "'DM Mono', monospace",
+                fontSize: 9,
+                padding: "3px 8px",
+                borderRadius: 100,
+                background: kw.match
+                  ? "rgba(90,138,106,0.1)"
+                  : "rgba(255,255,255,0.04)",
+                border: `1px solid ${kw.match ? "rgba(90,138,106,0.35)" : "rgba(255,255,255,0.07)"}`,
+                color: kw.match ? "rgba(90,138,106,0.85)" : "rgba(255,255,255,0.22)",
+                boxShadow: kw.match ? "0 0 8px rgba(90,138,106,0.15)" : "none",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {kw.label}
+            </motion.div>
+          ))}
+        </div>
+
+        {/* JD card */}
+        <motion.div
+          animate={{
+            y: [0, 2, 0],
+            borderColor: jdFocused ? "rgba(124,133,245,0.4)" : "rgba(255,255,255,0.08)",
+            boxShadow: jdFocused
+              ? "0 0 20px rgba(124,133,245,0.15), 0 4px 20px rgba(0,0,0,0.2)"
+              : "0 4px 16px rgba(0,0,0,0.2)",
+          }}
+          transition={{
+            y: { duration: 5.5, repeat: Infinity, ease: "easeInOut" },
+            borderColor: { duration: 0.4 },
+            boxShadow: { duration: 0.4 },
+          }}
+          style={{
+            width: 140,
+            background: "rgba(13,15,24,0.95)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: 12,
+            padding: "14px 16px",
+            flexShrink: 0,
+          }}
+        >
+          <div
+            style={{
+              fontFamily: "'DM Mono', monospace",
+              fontSize: 8,
+              letterSpacing: "0.14em",
+              textTransform: "uppercase",
+              color: "rgba(124,133,245,0.55)",
+              marginBottom: 10,
+            }}
+          >
+            Job Brief
+          </div>
+          {[82, 70, 90, 58, 76, 62, 84].map((w, i) => (
+            <div
+              key={i}
+              style={{
+                height: 5,
+                width: `${w}%`,
+                background: jdFocused ? "rgba(124,133,245,0.35)" : "rgba(124,133,245,0.15)",
+                borderRadius: 2,
+                marginBottom: 5,
+                transition: "background 0.4s ease",
+              }}
+            />
+          ))}
+          <div style={{ marginTop: 8 }}>
+            {jdFocused ? (
+              <span
+                style={{
+                  fontFamily: "'DM Mono', monospace",
+                  fontSize: 7,
+                  color: "rgba(124,133,245,0.6)",
+                  letterSpacing: "0.06em",
+                }}
+              >
+                ● receiving
+              </span>
+            ) : (
+              <span
+                style={{
+                  fontFamily: "'DM Mono', monospace",
+                  fontSize: 7,
+                  color: "rgba(255,255,255,0.15)",
+                  letterSpacing: "0.06em",
+                }}
+              >
+                paste JD →
+              </span>
+            )}
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Helper text */}
+      <div style={{ textAlign: "center" }}>
+        <p
+          style={{
+            fontFamily: "'DM Mono', monospace",
+            fontSize: 10,
+            letterSpacing: "0.14em",
+            textTransform: "uppercase",
+            color: "rgba(255,255,255,0.15)",
+            margin: "0 0 0.4rem",
+          }}
+        >
+          {scanning ? "Analysing…" : "Awaiting scan"}
+        </p>
+        <p
+          style={{
+            fontFamily: "'Inter', sans-serif",
+            fontSize: 13,
+            color: "rgba(255,255,255,0.22)",
+            margin: 0,
+            lineHeight: 1.6,
+          }}
+        >
+          {scanning
+            ? "Matching keywords against your resume"
+            : "Green tokens = keyword matches · faded = gaps"}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ── Section label (results) ─────────────────────────────────────────────────
 function SectionLabel({ children, accent }: { children: React.ReactNode; accent?: string }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "1rem" }}>
@@ -526,268 +784,83 @@ function SectionLabel({ children, accent }: { children: React.ReactNode; accent?
   );
 }
 
-// ── Container variants ──────────────────────────────────────────────────────
-const containerVariants: Variants = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.1 } },
-};
-const sectionVariants: Variants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE_OUT } },
-};
-
-// ── ResultView — two-column layout ─────────────────────────────────────────
-function ResultView({ result, onReset }: { result: ATSScanResult; onReset: () => void }) {
-  const color = scoreColor(result.score);
-
+// ── GlassInput ──────────────────────────────────────────────────────────────
+function GlassInput({
+  label,
+  id,
+  value,
+  onChange,
+  placeholder,
+  disabled,
+}: {
+  label: string;
+  id: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+  disabled: boolean;
+}) {
+  const [focused, setFocused] = useState(false);
   return (
-    <motion.div
-      className="ats-result-grid"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      style={{
-        display: "grid",
-        gridTemplateColumns: "280px 1fr",
-        gap: "3rem",
-        alignItems: "start",
-      }}
-    >
-      {/* ── Left panel — score + summary (sticky) ─────────────────── */}
-      <motion.div
-        className="ats-sticky-left"
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.55, ease: EASE_OUT }}
-        style={{ position: "sticky", top: "calc(56px + 2rem)", display: "flex", flexDirection: "column", gap: "1.5rem" }}
+    <div style={{ marginBottom: "1.5rem" }}>
+      <label
+        htmlFor={id}
+        style={{
+          display: "block",
+          fontFamily: "'DM Mono', monospace",
+          fontSize: "9px",
+          letterSpacing: "0.14em",
+          textTransform: "uppercase",
+          color: focused ? "rgba(201,168,108,0.6)" : "rgba(255,255,255,0.2)",
+          marginBottom: "6px",
+          transition: "color 0.25s",
+        }}
       >
-        {/* Score card */}
-        <div style={{
-          background: "rgba(19,21,28,0.8)",
-          border: `1px solid ${color}25`,
-          borderRadius: "20px",
-          padding: "2rem 1.5rem",
-          backdropFilter: "blur(20px)",
-          textAlign: "center",
-          position: "relative",
-          overflow: "hidden",
-        }}>
-          <div style={{
-            position: "absolute", top: 0, left: 0, right: 0, height: "2px",
-            background: `linear-gradient(90deg, transparent, ${color}, transparent)`,
-          }} />
-          <ScoreCircle score={result.score} />
-        </div>
-
-        {/* Summary card */}
-        <div style={{
-          background: "rgba(19,21,28,0.6)",
-          border: "1px solid rgba(255,255,255,0.07)",
-          borderRadius: "16px",
-          padding: "1.25rem 1.35rem",
-          backdropFilter: "blur(16px)",
-        }}>
-          <p style={{
-            fontFamily: "'DM Mono', monospace",
-            fontSize: "9px",
-            letterSpacing: "0.14em",
-            textTransform: "uppercase",
-            color: "rgba(255,255,255,0.2)",
-            margin: "0 0 0.75rem",
-          }}>
-            Summary
-          </p>
-          <p style={{
-            fontFamily: "'Inter', sans-serif",
-            fontSize: "13px",
-            color: "rgba(255,255,255,0.5)",
-            lineHeight: 1.75,
-            margin: 0,
-          }}>
-            {result.summary}
-          </p>
-        </div>
-
-        {/* Download PDF */}
-        <motion.button
-          onClick={() => downloadATSReport(result)}
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.97 }}
-          style={{
-            display: "flex", alignItems: "center", justifyContent: "center", gap: "7px",
-            padding: "9px 14px", borderRadius: "10px",
-            background: "rgba(201,168,108,0.08)",
-            border: "1px solid rgba(201,168,108,0.25)",
-            color: "rgba(201,168,108,0.8)",
-            cursor: "pointer",
-            fontFamily: "'DM Mono', monospace",
-            fontSize: "10px", letterSpacing: "0.08em",
-            transition: "all 0.2s ease",
-          }}
-        >
-          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M8 2v8M5 7l3 3 3-3"/><path d="M2 12h12"/>
-          </svg>
-          Download Report
-        </motion.button>
-
-        {/* Scan another */}
-        <motion.button
-          whileHover={{ x: -3 }}
-          onClick={onReset}
-          style={{
-            background: "none", border: "none", padding: 0, cursor: "pointer",
-            fontSize: "12px", letterSpacing: "0.06em",
-            color: "rgba(255,255,255,0.22)",
-            fontFamily: "'DM Mono', monospace",
-            display: "flex", alignItems: "center", gap: "0.4rem",
-          }}
-        >
-          ← scan another role
-        </motion.button>
-      </motion.div>
-
-      {/* ── Right panel — detailed analysis ───────────────────────── */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.15, ease: EASE_OUT }}
-        style={{ display: "flex", flexDirection: "column", gap: "2rem" }}
-      >
-        {/* Headline */}
-        <div style={{
-          background: "rgba(19,21,28,0.5)",
-          border: "1px solid rgba(201,168,108,0.12)",
-          borderLeft: "3px solid rgba(201,168,108,0.4)",
-          borderRadius: "0 12px 12px 0",
-          padding: "1.25rem 1.5rem",
-          backdropFilter: "blur(12px)",
-        }}>
-          <p style={{
-            fontFamily: "'Poppins', system-ui, sans-serif",
-            fontWeight: 300,
-            fontSize: "clamp(0.95rem, 1.8vw, 1.2rem)",
-            color: "rgba(255,255,255,0.7)",
-            lineHeight: 1.65,
-            margin: 0,
-            letterSpacing: "-0.01em",
-          }}>
-            {result.headline}
-          </p>
-        </div>
-
-        {/* Keyword hits */}
-        {result.keyword_hits.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25, duration: 0.5, ease: EASE_OUT }}
-            style={{
-              background: "rgba(90,138,106,0.04)",
-              border: "1px solid rgba(90,138,106,0.15)",
-              borderRadius: "16px",
-              padding: "1.5rem 1.75rem",
-              backdropFilter: "blur(12px)",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
-              <SectionLabel accent="#5a8a6a">Keyword Hits</SectionLabel>
-              <span style={{
-                fontFamily: "'DM Mono', monospace", fontSize: "10px",
-                color: "#5a8a6a", background: "rgba(90,138,106,0.12)",
-                border: "1px solid rgba(90,138,106,0.25)",
-                borderRadius: "100px", padding: "2px 10px",
-              }}>
-                {result.keyword_hits.length} found
-              </span>
-            </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-              {result.keyword_hits.map((kw, i) => (
-                <AnimatedChip key={kw} label={kw} variant="green" index={i} />
-              ))}
-            </div>
-          </motion.div>
-        )}
-
-        {/* Missing skills */}
-        {(result.hard_skills_missing.length > 0 || result.soft_skills_missing.length > 0) && (
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35, duration: 0.5, ease: EASE_OUT }}
-            style={{
-              background: "rgba(224,92,92,0.03)",
-              border: "1px solid rgba(224,92,92,0.12)",
-              borderRadius: "16px",
-              padding: "1.5rem 1.75rem",
-              backdropFilter: "blur(12px)",
-            }}
-          >
-            <SectionLabel accent="#e05c5c">Missing Skills</SectionLabel>
-            <div style={{ display: "grid", gridTemplateColumns: result.hard_skills_missing.length > 0 && result.soft_skills_missing.length > 0 ? "1fr 1fr" : "1fr", gap: "1.5rem", marginTop: "0.5rem" }}>
-              {result.hard_skills_missing.length > 0 && (
-                <div>
-                  <p style={{
-                    fontFamily: "'DM Mono', monospace", fontSize: "9px",
-                    letterSpacing: "0.1em", color: "rgba(255,255,255,0.25)",
-                    textTransform: "uppercase", marginBottom: "0.75rem", marginTop: 0,
-                  }}>
-                    Hard Skills
-                  </p>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-                    {result.hard_skills_missing.map((skill, i) => (
-                      <AnimatedChip key={skill} label={skill} variant="red" index={i} />
-                    ))}
-                  </div>
-                </div>
-              )}
-              {result.soft_skills_missing.length > 0 && (
-                <div>
-                  <p style={{
-                    fontFamily: "'DM Mono', monospace", fontSize: "9px",
-                    letterSpacing: "0.1em", color: "rgba(255,255,255,0.25)",
-                    textTransform: "uppercase", marginBottom: "0.75rem", marginTop: 0,
-                  }}>
-                    Soft Skills
-                  </p>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-                    {result.soft_skills_missing.map((skill, i) => (
-                      <AnimatedChip key={skill} label={skill} variant="muted" index={i} />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </motion.div>
-        )}
-
-        {/* Fixes */}
-        {result.fixes.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.45, duration: 0.5, ease: EASE_OUT }}
-          >
-            <SectionLabel accent="rgba(255,255,255,0.2)">Suggested Fixes</SectionLabel>
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginTop: "0.5rem" }}>
-              {result.fixes.map((fix, i) => (
-                <FixCard key={i} issue={fix.issue} fix={fix.fix} index={i} />
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </motion.div>
-    </motion.div>
+        {label}
+      </label>
+      <input
+        id={id}
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        disabled={disabled}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        style={{
+          width: "100%",
+          background: "transparent",
+          border: "none",
+          borderBottom: `1.5px solid ${focused ? "#c9a86c" : "rgba(255,255,255,0.12)"}`,
+          borderRadius: 0,
+          color: "rgba(255,255,255,0.85)",
+          fontFamily: "'Inter', sans-serif",
+          fontSize: "14px",
+          lineHeight: 1.5,
+          padding: "0.5rem 0",
+          outline: "none",
+          boxSizing: "border-box",
+          opacity: disabled ? 0.5 : 1,
+          transition: "border-color 0.25s, opacity 0.2s",
+          boxShadow: focused ? "0 1px 0 #c9a86c" : "none",
+        }}
+      />
+    </div>
   );
 }
 
 // ── ATSScanner (main export) ────────────────────────────────────────────────
 export function ATSScanner() {
   const [jd, setJd] = useState("");
+  const [company, setCompany] = useState("");
+  const [role, setRole] = useState("");
   const [result, setResult] = useState<ATSScanResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [jdFocused, setJdFocused] = useState(false);
+
+  const companyId = useId();
+  const roleId = useId();
   const textareaId = useId();
 
   const isReady = jd.trim().length >= 30 && !isPending;
@@ -806,215 +879,373 @@ export function ATSScanner() {
     });
   }
 
-  return (
-    <div className="mobile-page-wrap" style={{
-      background: "var(--bg)",
-      minHeight: "100vh",
-      paddingLeft: "var(--sidebar-w, 60px)",
-    }}>
-      <div style={{
-        maxWidth: result ? "1100px" : "720px",
-        margin: "0 auto",
-        padding: "calc(56px + 4rem) 5vw 8rem",
-        transition: "max-width 0.5s cubic-bezier(0.22, 1, 0.36, 1)",
-      }}>
-        {/* ── Header ─────────────────────────────────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: EASE_OUT }}
-          style={{ marginBottom: "3rem" }}
-        >
-          <p style={{
-            fontFamily: "'DM Mono', monospace",
-            fontSize: "9px",
-            letterSpacing: "0.2em",
-            textTransform: "uppercase",
-            color: "rgba(201,168,108,0.5)",
-            margin: "0 0 0.75rem",
-          }}>
-            ATS Scanner
-          </p>
-          <h1 style={{
-            fontFamily: "'Poppins', system-ui, sans-serif",
-            fontSize: "clamp(1.8rem, 4vw, 2.8rem)",
-            fontWeight: 300,
-            color: "rgba(255,255,255,0.92)",
-            margin: "0 0 0.75rem",
-            letterSpacing: "-0.03em",
-            lineHeight: 1.1,
-          }}>
-            ATS Score
-          </h1>
-          <p style={{
-            fontFamily: "'Inter', sans-serif",
-            fontSize: "14px",
-            color: "rgba(255,255,255,0.35)",
-            lineHeight: 1.7,
-            margin: 0,
-          }}>
-            See exactly how your resume ranks — and what to fix.
-          </p>
-        </motion.div>
+  const color = result ? scoreColor(result.score) : "#c9a86c";
 
-        {/* ── Form / Result ──────────────────────────────────────────── */}
-        <AnimatePresence mode="wait">
-          {!result ? (
-            <motion.div
-              key="form"
+  return (
+    <>
+      <style>{`@keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(200%); } }`}</style>
+      <div style={{
+        position: "fixed",
+        inset: 0,
+        paddingLeft: "var(--sidebar-w, 68px)",
+        paddingTop: "56px",
+        display: "grid",
+        gridTemplateColumns: "700px 1fr",
+        overflow: "hidden",
+      }}>
+        {/* ── Left column — form panel ────────────────────────────────── */}
+        <div style={{
+          background: "linear-gradient(160deg, rgba(13,15,24,0.98) 0%, rgba(9,11,18,0.98) 100%)",
+          borderRight: "1px solid rgba(255,255,255,0.05)",
+          overflowY: "auto",
+          padding: "3rem 2.5rem",
+        }}>
+          {/* Header */}
+          <div style={{ marginBottom: "2.5rem" }}>
+            <p style={{
+              fontFamily: "'DM Mono', monospace",
+              fontSize: "9px",
+              letterSpacing: "0.2em",
+              textTransform: "uppercase",
+              color: "rgba(201,168,108,0.6)",
+              margin: "0 0 0.75rem",
+            }}>
+              ATS Scanner
+            </p>
+            <h1 style={{
+              fontFamily: "'Poppins', system-ui, sans-serif",
+              fontSize: "clamp(1.6rem, 3vw, 2.2rem)",
+              fontWeight: 300,
+              fontStyle: "italic",
+              color: "rgba(255,255,255,0.92)",
+              margin: 0,
+              letterSpacing: "-0.03em",
+              lineHeight: 1.15,
+            }}>
+              Scan your resume against any JD.
+            </h1>
+          </div>
+
+          {/* Inputs */}
+          <GlassInput
+            label="Company"
+            id={companyId}
+            value={company}
+            onChange={setCompany}
+            placeholder="Stripe, Notion, Acme…"
+            disabled={isPending}
+          />
+          <GlassInput
+            label="Role"
+            id={roleId}
+            value={role}
+            onChange={setRole}
+            placeholder="Software Engineer, Designer…"
+            disabled={isPending}
+          />
+
+          {/* JD Textarea */}
+          <div style={{ marginBottom: "1.5rem" }}>
+            <label
+              htmlFor={textareaId}
+              style={{
+                display: "block",
+                fontFamily: "'DM Mono', monospace",
+                fontSize: "9px",
+                letterSpacing: "0.14em",
+                textTransform: "uppercase",
+                color: jdFocused ? "rgba(201,168,108,0.6)" : "rgba(255,255,255,0.2)",
+                marginBottom: "6px",
+                transition: "color 0.25s",
+              }}
+            >
+              Job Description
+            </label>
+            <textarea
+              id={textareaId}
+              value={jd}
+              onChange={(e) => setJd(e.target.value)}
+              disabled={isPending}
+              onFocus={() => setJdFocused(true)}
+              onBlur={() => setJdFocused(false)}
+              placeholder="Paste the full job description here…"
+              style={{
+                width: "100%",
+                minHeight: "220px",
+                background: "rgba(255,255,255,0.03)",
+                border: `1.5px solid ${jdFocused ? "#c9a86c" : "rgba(255,255,255,0.08)"}`,
+                borderRadius: "10px",
+                color: "rgba(255,255,255,0.75)",
+                fontFamily: "'Inter', sans-serif",
+                fontSize: "14px",
+                lineHeight: 1.75,
+                padding: "0.75rem 1rem",
+                resize: "vertical",
+                outline: "none",
+                boxSizing: "border-box",
+                opacity: isPending ? 0.5 : 1,
+                transition: "border-color 0.25s, opacity 0.2s",
+              }}
+            />
+          </div>
+
+          {/* Loading */}
+          <AnimatePresence>
+            {isPending && <ScanningLoader />}
+          </AnimatePresence>
+
+          {/* Error */}
+          {error && (
+            <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.35 }}
+              style={{
+                fontSize: "13px",
+                color: "#e05c5c",
+                fontFamily: "'Inter', sans-serif",
+                marginBottom: "1.25rem",
+                padding: "0.75rem 1rem",
+                background: "rgba(224,92,92,0.08)",
+                border: "1px solid rgba(224,92,92,0.2)",
+                borderRadius: "10px",
+              }}
             >
-              {/* JD Textarea */}
-              <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1, ease: EASE_OUT }}
-                style={{
-                  background: jdFocused
-                    ? "rgba(19,21,28,0.9)"
-                    : "rgba(19,21,28,0.6)",
-                  border: jdFocused
-                    ? "1px solid rgba(201,168,108,0.35)"
-                    : "1px solid rgba(255,255,255,0.07)",
-                  borderRadius: "16px",
-                  transition: "background 0.25s, border-color 0.25s, box-shadow 0.25s",
-                  boxShadow: jdFocused ? "0 0 0 3px rgba(201,168,108,0.08), 0 8px 32px rgba(0,0,0,0.3)" : "0 4px 16px rgba(0,0,0,0.15)",
-                  backdropFilter: "blur(20px)",
-                  overflow: "hidden",
-                  marginBottom: "1.5rem",
-                }}
-              >
-                <label
-                  htmlFor={textareaId}
-                  style={{
-                    display: "block",
-                    fontFamily: "'DM Mono', monospace",
-                    fontSize: "9px",
-                    letterSpacing: "0.16em",
-                    textTransform: "uppercase",
-                    color: jdFocused ? "rgba(201,168,108,0.6)" : "rgba(255,255,255,0.2)",
-                    padding: "1.1rem 1.25rem 0",
-                    transition: "color 0.25s",
-                  }}
-                >
-                  Job Description
-                </label>
-                <textarea
-                  id={textareaId}
-                  value={jd}
-                  onChange={(e) => setJd(e.target.value)}
-                  disabled={isPending}
-                  onFocus={() => setJdFocused(true)}
-                  onBlur={() => setJdFocused(false)}
-                  placeholder="Paste the full job description here…"
-                  style={{
-                    width: "100%",
-                    minHeight: "240px",
-                    background: "transparent",
-                    border: "none",
-                    color: "rgba(255,255,255,0.75)",
-                    fontFamily: "'Inter', sans-serif",
-                    fontSize: "14px",
-                    lineHeight: 1.75,
-                    padding: "0.75rem 1.25rem 1.25rem",
-                    resize: "vertical",
-                    outline: "none",
-                    boxSizing: "border-box",
-                    opacity: isPending ? 0.5 : 1,
-                    transition: "opacity 0.2s",
-                  }}
-                />
-              </motion.div>
+              {error}
+            </motion.p>
+          )}
 
-              {/* Loading visualizer */}
-              <AnimatePresence>
-                {isPending && <ScanningLoader />}
-              </AnimatePresence>
+          {/* Scan button */}
+          <button
+            onClick={handleScan}
+            disabled={!isReady}
+            style={{
+              width: "100%",
+              background: isReady
+                ? "linear-gradient(135deg, #c9a86c 0%, #a8834e 100%)"
+                : "rgba(255,255,255,0.04)",
+              border: isReady ? "none" : "1px solid rgba(255,255,255,0.08)",
+              borderRadius: "14px",
+              padding: "1.1rem",
+              fontFamily: "'Inter', sans-serif",
+              fontSize: "15px",
+              fontWeight: 600,
+              color: isReady ? "#1a1208" : "rgba(255,255,255,0.18)",
+              cursor: isReady ? "pointer" : "default",
+              transition: "background 0.3s, color 0.3s, box-shadow 0.3s",
+              boxShadow: isReady ? "0 6px 24px rgba(201,168,108,0.2)" : "none",
+              position: "relative",
+              overflow: "hidden",
+            }}
+          >
+            {isReady && (
+              <div style={{
+                position: "absolute",
+                inset: 0,
+                background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent)",
+                animation: "shimmer 2.5s linear infinite",
+                pointerEvents: "none",
+              }} />
+            )}
+            Scan Resume →
+          </button>
+        </div>
 
-              {/* Error */}
-              {error && (
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  style={{
-                    fontSize: "13px",
-                    color: "#e05c5c",
-                    fontFamily: "'Inter', sans-serif",
-                    marginBottom: "1.25rem",
-                    marginTop: 0,
-                    padding: "0.75rem 1rem",
-                    background: "rgba(224,92,92,0.08)",
-                    border: "1px solid rgba(224,92,92,0.2)",
-                    borderRadius: "10px",
-                  }}
-                >
-                  {error}
-                </motion.p>
-              )}
-
-              {/* Scan button */}
-              {!isPending && (
-                <motion.button
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2, duration: 0.4 }}
-                  whileHover={isReady ? {
-                    scale: 1.02,
-                    boxShadow: "0 12px 40px rgba(201,168,108,0.35)",
-                  } : {}}
-                  whileTap={isReady ? { scale: 0.98 } : {}}
-                  onClick={handleScan}
-                  disabled={!isReady}
-                  style={{
-                    width: "100%",
-                    background: isReady
-                      ? "linear-gradient(135deg, #c9a86c 0%, #a8834e 100%)"
-                      : "rgba(255,255,255,0.04)",
-                    border: isReady ? "none" : "1px solid rgba(255,255,255,0.08)",
-                    borderRadius: "12px",
-                    padding: "1rem",
-                    fontFamily: "'Inter', sans-serif",
-                    fontSize: "14px",
-                    fontWeight: 600,
-                    color: isReady ? "#1a1208" : "rgba(255,255,255,0.2)",
-                    cursor: isReady ? "pointer" : "default",
-                    transition: "background 0.3s, color 0.3s",
-                    position: "relative",
-                    overflow: "hidden",
-                  }}
-                >
-                  {/* Animated scan line on the button */}
-                  {isReady && (
-                    <motion.div
-                      animate={{ x: ["-100%", "200%"] }}
-                      transition={{ duration: 2.5, repeat: Infinity, ease: "linear", repeatDelay: 1 }}
-                      style={{
-                        position: "absolute",
-                        inset: 0,
-                        background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)",
-                        pointerEvents: "none",
-                      }}
-                    />
-                  )}
-                  Scan Resume →
-                </motion.button>
-              )}
-            </motion.div>
+        {/* ── Right column — results panel ────────────────────────────── */}
+        <div style={{
+          background: "var(--bg)",
+          overflowY: "auto",
+          padding: "3rem 2.5rem",
+        }}>
+          {!result ? (
+            <ATSVisualizer jdFocused={jdFocused} scanning={isPending} />
           ) : (
+            /* Results */
             <motion.div
-              key="result"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, ease: EASE_OUT }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+              style={{ display: "flex", flexDirection: "column", gap: "2rem" }}
             >
-              <ResultView result={result} onReset={() => { setResult(null); setJd(""); }} />
+              {/* Score circle centered */}
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                <ScoreCircle score={result.score} />
+
+                {/* Download PDF */}
+                <motion.button
+                  onClick={() => downloadATSReport(result)}
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  style={{
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: "7px",
+                    padding: "9px 14px", borderRadius: "10px",
+                    background: "rgba(201,168,108,0.08)",
+                    border: "1px solid rgba(201,168,108,0.25)",
+                    color: "rgba(201,168,108,0.8)",
+                    cursor: "pointer",
+                    fontFamily: "'DM Mono', monospace",
+                    fontSize: "10px", letterSpacing: "0.08em",
+                    transition: "all 0.2s ease",
+                    marginTop: "0.5rem",
+                  }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M8 2v8M5 7l3 3 3-3"/><path d="M2 12h12"/>
+                  </svg>
+                  Download Report
+                </motion.button>
+              </div>
+
+              {/* Headline */}
+              <div style={{
+                background: "rgba(19,21,28,0.5)",
+                border: "1px solid rgba(201,168,108,0.12)",
+                borderLeft: "3px solid rgba(201,168,108,0.4)",
+                borderRadius: "0 12px 12px 0",
+                padding: "1.25rem 1.5rem",
+              }}>
+                <p style={{
+                  fontFamily: "'Poppins', system-ui, sans-serif",
+                  fontWeight: 300,
+                  fontSize: "clamp(0.95rem, 1.5vw, 1.15rem)",
+                  color: "rgba(255,255,255,0.7)",
+                  lineHeight: 1.65,
+                  margin: 0,
+                  letterSpacing: "-0.01em",
+                }}>
+                  {result.headline}
+                </p>
+              </div>
+
+              {/* Summary */}
+              <div style={{
+                background: "rgba(19,21,28,0.6)",
+                border: "1px solid rgba(255,255,255,0.07)",
+                borderRadius: "16px",
+                padding: "1.25rem 1.35rem",
+              }}>
+                <p style={{
+                  fontFamily: "'DM Mono', monospace",
+                  fontSize: "9px",
+                  letterSpacing: "0.14em",
+                  textTransform: "uppercase",
+                  color: "rgba(255,255,255,0.2)",
+                  margin: "0 0 0.75rem",
+                }}>
+                  Summary
+                </p>
+                <p style={{
+                  fontFamily: "'Inter', sans-serif",
+                  fontSize: "13px",
+                  color: "rgba(255,255,255,0.5)",
+                  lineHeight: 1.75,
+                  margin: 0,
+                }}>
+                  {result.summary}
+                </p>
+              </div>
+
+              {/* Keyword hits */}
+              {result.keyword_hits.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.25, duration: 0.5, ease: EASE_OUT }}
+                  style={{
+                    background: "rgba(90,138,106,0.04)",
+                    border: "1px solid rgba(90,138,106,0.15)",
+                    borderRadius: "16px",
+                    padding: "1.5rem 1.75rem",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
+                    <SectionLabel accent="#5a8a6a">Keyword Hits</SectionLabel>
+                    <span style={{
+                      fontFamily: "'DM Mono', monospace", fontSize: "10px",
+                      color: "#5a8a6a", background: "rgba(90,138,106,0.12)",
+                      border: "1px solid rgba(90,138,106,0.25)",
+                      borderRadius: "100px", padding: "2px 10px",
+                    }}>
+                      {result.keyword_hits.length} found
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+                    {result.keyword_hits.map((kw, i) => (
+                      <AnimatedChip key={kw} label={kw} variant="green" index={i} />
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Missing skills */}
+              {(result.hard_skills_missing.length > 0 || result.soft_skills_missing.length > 0) && (
+                <motion.div
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.35, duration: 0.5, ease: EASE_OUT }}
+                  style={{
+                    background: "rgba(224,92,92,0.03)",
+                    border: "1px solid rgba(224,92,92,0.12)",
+                    borderRadius: "16px",
+                    padding: "1.5rem 1.75rem",
+                  }}
+                >
+                  <SectionLabel accent="#e05c5c">Missing Skills</SectionLabel>
+                  <div style={{ display: "grid", gridTemplateColumns: result.hard_skills_missing.length > 0 && result.soft_skills_missing.length > 0 ? "1fr 1fr" : "1fr", gap: "1.5rem", marginTop: "0.5rem" }}>
+                    {result.hard_skills_missing.length > 0 && (
+                      <div>
+                        <p style={{
+                          fontFamily: "'DM Mono', monospace", fontSize: "9px",
+                          letterSpacing: "0.1em", color: "rgba(255,255,255,0.25)",
+                          textTransform: "uppercase", marginBottom: "0.75rem", marginTop: 0,
+                        }}>
+                          Hard Skills
+                        </p>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+                          {result.hard_skills_missing.map((skill, i) => (
+                            <AnimatedChip key={skill} label={skill} variant="red" index={i} />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {result.soft_skills_missing.length > 0 && (
+                      <div>
+                        <p style={{
+                          fontFamily: "'DM Mono', monospace", fontSize: "9px",
+                          letterSpacing: "0.1em", color: "rgba(255,255,255,0.25)",
+                          textTransform: "uppercase", marginBottom: "0.75rem", marginTop: 0,
+                        }}>
+                          Soft Skills
+                        </p>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+                          {result.soft_skills_missing.map((skill, i) => (
+                            <AnimatedChip key={skill} label={skill} variant="muted" index={i} />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Fixes */}
+              {result.fixes.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.45, duration: 0.5, ease: EASE_OUT }}
+                >
+                  <SectionLabel accent="rgba(255,255,255,0.2)">Suggested Fixes</SectionLabel>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginTop: "0.5rem" }}>
+                    {result.fixes.map((fix, i) => (
+                      <FixCard key={i} issue={fix.issue} fix={fix.fix} index={i} />
+                    ))}
+                  </div>
+                </motion.div>
+              )}
             </motion.div>
           )}
-        </AnimatePresence>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

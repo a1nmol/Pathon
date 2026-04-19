@@ -715,7 +715,7 @@ function KanbanColumn({
 }
 
 // ── KanbanBoard ────────────────────────────────────────────────────────────
-export function KanbanBoard({ initialApps }: { initialApps: JobApplication[] }) {
+export function KanbanBoard({ initialApps, isDemo = false }: { initialApps: JobApplication[]; isDemo?: boolean }) {
   const [apps, setApps] = useState(initialApps);
   const [showAdd, setShowAdd] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -728,20 +728,42 @@ export function KanbanBoard({ initialApps }: { initialApps: JobApplication[] }) 
         a.id === id ? { ...a, current_status: newStatus, last_activity_at: new Date().toISOString() } : a
       )
     );
-    startTransition(async () => {
-      await moveApplication(id, newStatus);
-    });
+    if (!isDemo) {
+      startTransition(async () => {
+        await moveApplication(id, newStatus);
+      });
+    }
   }
 
   function handleDelete(id: string) {
     setApps((prev) => prev.filter((a) => a.id !== id));
-    startTransition(async () => {
-      await removeApplication(id);
-    });
+    if (!isDemo) {
+      startTransition(async () => {
+        await removeApplication(id);
+      });
+    }
   }
 
   async function handleAdd(data: { company: string; role_title: string; job_url?: string; job_description?: string; notes?: string }) {
     setShowAdd(false);
+    if (isDemo) {
+      const newApp: JobApplication = {
+        id: Math.random().toString(36).slice(2),
+        user_id: "demo",
+        company: data.company,
+        role_title: data.role_title,
+        job_url: data.job_url ?? null,
+        job_description: data.job_description ?? null,
+        current_status: "applied",
+        applied_at: new Date().toISOString(),
+        last_activity_at: new Date().toISOString(),
+        notes: data.notes ?? null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      setApps((prev) => [newApp, ...prev]);
+      return;
+    }
     startTransition(async () => {
       const newApp = await addApplication(data);
       setApps((prev) => [newApp as unknown as JobApplication, ...prev]);
